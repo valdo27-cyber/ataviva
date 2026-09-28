@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ata Viva — grave, transcreva e finalize reuniões</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#D6452C">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --paper:#F4F1EA; --card:#FBFAF6; --doc:#FDFCF9;
+  --ink:#191713; --ink-soft:#6E675C; --line:#E0DACC; --line-soft:#EAE5D8;
+  --red:#D6452C; --red-deep:#B03A24; --mark:#F3E5C3;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Instrument Sans',sans-serif;background:#151310;color:var(--ink)}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+input,textarea{font-family:inherit;color:inherit}
+.mono{font-family:'IBM Plex Mono',monospace}
+svg.lucide{width:18px;height:18px;stroke-width:1.9}
+
+/* ---------- palco + moldura do celular ---------- */
+.stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+.phone{position:relative;width:100vw;height:100dvh;background:var(--paper);overflow:hidden}
+.notch{display:none}
+.caption{display:none}
+@media(min-width:540px){
+  .stage{padding:36px 20px}
+  .phone{width:398px;height:min(848px,calc(100vh - 92px));border-radius:48px;
+    box-shadow:0 0 0 11px #0c0b0a,0 0 0 12px #35302a,0 50px 90px -28px rgba(0,0,0,.85)}
+  .notch{display:block;position:absolute;top:13px;left:50%;transform:translateX(-50%);
+    width:98px;height:27px;background:#0c0b0a;border-radius:999px;z-index:60;pointer-events:none}
+  .caption{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;color:#6d6457}
+}
+
+/* ---------- telas ---------- */
+.app{height:100%;position:relative}
+.screen{position:absolute;inset:0;overflow-y:auto;display:none;padding:60px 22px 26px;
+  overscroll-behavior:contain;scrollbar-width:thin}
+.screen.active{display:flex;flex-direction:column;animation:enter .28s ease}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:539px){.screen{padding-top:calc(env(safe-area-inset-top,0px) + 34px)}}
+
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase}
+.hairline{height:1px;background:var(--line);border:none}
+
+/* ---------- home ---------- */
+.wordmark{font-family:'Fraunces',serif;font-weight:600;font-size:38px;letter-spacing:-.01em;line-height:1.05}
+.wordmark .dot{color:var(--red)}
+.tagline{margin-top:8px;color:var(--ink-soft);font-size:14.5px;line-height:1.5}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:34px 0 30px}
+.hero-btn{position:relative;width:148px;height:148px;border-radius:50%;background:var(--red);
+  display:grid;place-items:center;transition:transform .15s ease;
+  box-shadow:0 22px 44px -18px rgba(214,69,44,.55),inset 0 -7px 16px rgba(0,0,0,.18),inset 0 3px 8px rgba(255,255,255,.22)}
+.hero-btn::before{content:"";position:absolute;inset:-11px;border-radius:50%;border:1px solid rgba(214,69,44,.4)}
+.hero-btn::after{content:"";position:absolute;inset:-11px;border-radius:50%;border:1px solid rgba(214,69,44,.45);
+  animation:ring 2.6s ease-out infinite}
+@keyframes ring{0%{transform:scale(1);opacity:.9}70%{transform:scale(1.22);opacity:0}100%{opacity:0}}
+.hero-btn:active{transform:scale(.95)}
+.hero-btn .stop{width:52px;height:52px;border-radius:12px;background:var(--doc);
+  box-shadow:inset 0 -3px 6px rgba(0,0,0,.12)}
+.hero-label{margin-top:26px;font-family:'Fraunces',serif;font-size:21px;font-weight:600}
+.hero-hint{margin-top:7px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--ink-soft)}
+.home-stats{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:var(--ink-soft);
+  text-transform:uppercase;text-align:center;padding-bottom:26px;border-bottom:1px solid var(--line)}
+.team{display:flex;align-items:center;gap:12px;margin-top:14px;padding:14px 16px;border:1px solid var(--line);
+  border-radius:16px;background:var(--card);text-align:left;transition:background .15s}
+.team:active{background:rgba(0,0,0,.03)}
+.team .avs{display:flex;flex:none}
+.av{width:38px;height:38px;border-radius:50%;background:var(--card);border:1.5px solid var(--line);
+  display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px;flex:none}
+.team .av{width:34px;height:34px;font-size:11px;margin-left:-8px;border-color:var(--paper);background:var(--doc)}
+.team .av:first-child{margin-left:0}
+.team .ch{color:var(--ink-soft);flex:none}
+.list-head{display:flex;align-items:baseline;justify-content:space-between;padding:26px 0 6px}
+.list-head .link{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--red-deep);text-transform:uppercase}
+.row{display:flex;align-items:center;gap:12px;padding:15px 2px;border-bottom:1px solid var(--line-soft);
+  text-align:left;transition:background .15s;min-width:0}
+.row:active{background:rgba(0,0,0,.03)}
+.row-main{flex:1;min-width:0}
+.row-title{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-sub{margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--ink-soft);text-transform:uppercase}
+.row .ch{color:var(--ink-soft);flex:none}
+.empty{padding:34px 8px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6}
+.empty svg{width:26px;height:26px;margin-bottom:10px;opacity:.6}
+
+/* ---------- gravação ---------- */
+.rec-top{display:flex;align-items:center;justify-content:space-between}
+.rec-badge{display:flex;align-items:center;gap:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--red-deep)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite}
+.dot.paused{background:var(--ink-soft);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(214,69,44,.45)}70%{box-shadow:0 0 0 9px rgba(214,69,44,0)}100%{box-shadow:0 0 0 0 rgba(214,69,44,0)}}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  border:1px solid var(--line);border-radius:999px;padding:4px 9px;color:var(--ink-soft)}
+.chip.red{color:var(--red-deep);border-color:rgba(214,69,44,.4)}
+.att-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.att-chips:empty{display:none}
+.att-chip{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:var(--ink-soft);transition:all .25s}
+.att-chip.talking{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.timer{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:54px;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;text-align:center;margin:18px 0 6px}
+.timer-sub{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.22em;color:var(--ink-soft)}
+.wave-wrap{margin:16px 0 6px;height:62px;border:1px solid var(--line);border-radius:14px;background:var(--card);
+  overflow:hidden;position:relative}
+#wave{width:100%;height:100%;display:block;transition:opacity .3s,filter .3s}
+#wave.paused{opacity:.28;filter:grayscale(1)}
+.tx-head{display:flex;align-items:center;gap:10px;margin:16px 0 4px}
+.tx-head .eyebrow{flex:none}
+.tx-head .hairline{flex:1}
+.tx-list{display:flex;flex-direction:column;gap:2px;max-height:30vh;overflow-y:auto;padding:4px 2px 8px;scrollbar-width:thin}
+.tx-item{display:flex;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line-soft);animation:enter .3s ease}
+.tx-item .t{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--red-deep);padding-top:3px;flex:none}
+.tx-item .x{font-size:14.5px;line-height:1.55;flex:1;min-width:0}
+.spk{font-weight:700;color:var(--ink)}
+.tx-interim{padding:10px 4px;font-size:14.5px;font-style:italic;color:var(--ink-soft);min-height:24px}
+.sr-banner{margin:12px 0 0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+  display:flex;gap:10px;align-items:flex-start;background:var(--card)}
+.sr-banner p{font-size:12.5px;line-height:1.5;color:var(--ink-soft);flex:1}
+.sr-banner button{flex:none;font-size:12px;font-weight:600;color:var(--red-deep);text-decoration:underline}
+.bar{position:sticky;bottom:0;display:flex;gap:10px;margin:10px -22px 0;
+  padding:14px 22px calc(14px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top,var(--paper) 72%,rgba(244,241,234,0));z-index:20}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:15px;
+  font-size:15px;font-weight:600;transition:transform .12s}
+.btn:active{transform:scale(.97)}
+.btn.ghost{flex:1;border:1.5px solid var(--ink);background:transparent}
+.btn.solid{flex:1;background:var(--ink);color:var(--paper)}
+.btn.red{background:var(--red);color:#fff}
+.btn.small{height:38px;border-radius:10px;font-size:13px;padding:0 14px;flex:none}
+.bar .btn.ghost.small2{flex:.7}
+
+/* ---------- processamento ---------- */
+.processing{position:absolute;inset:0;background:var(--ink);color:var(--paper);z-index:80;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:34px;padding:40px}
+.processing.show{display:flex;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.eq{display:flex;align-items:flex-end;gap:6px;height:44px}
+.eq span{width:5px;border-radius:3px;background:var(--red);animation:eq 1s ease-in-out infinite}
+.eq span:nth-child(1){height:40%;animation-delay:0s}.eq span:nth-child(2){height:90%;animation-delay:.15s}
+.eq span:nth-child(3){height:60%;animation-delay:.3s}.eq span:nth-child(4){height:100%;animation-delay:.45s}
+@keyframes eq{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+.pr-steps{display:flex;flex-direction:column;gap:16px;align-self:stretch;max-width:260px;margin:0 auto}
+.pr-step{display:flex;align-items:center;gap:12px;font-size:14.5px;opacity:.32;transition:opacity .4s}
+.pr-step .pr-dot{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;flex:none;
+  display:grid;place-items:center;font-size:11px}
+.pr-step.done{opacity:1}
+.pr-step.done .pr-dot{background:var(--red);border-color:var(--red);color:#fff}
+
+/* ---------- formatos ---------- */
+.screen-title{font-family:'Fraunces',serif;font-size:26px;font-weight:600;line-height:1.2;margin-top:10px}
+.screen-sub{margin-top:8px;color:var(--ink-soft);font-size:13.5px;line-height:1.55}
+.fm-item{display:flex;align-items:center;gap:14px;padding:16px 2px;border-bottom:1px solid var(--line-soft);text-align:left;transition:background .15s}
+.fm-item:active{background:rgba(0,0,0,.03)}
+.fm-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);width:22px;flex:none}
+.fm-main{flex:1;min-width:0}
+.fm-title{font-weight:600;font-size:15.5px;display:flex;align-items:center;gap:8px}
+.fm-desc{margin-top:3px;font-size:12.5px;color:var(--ink-soft)}
+.fm-gen{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.14em;border:1px solid var(--line);
+  border-radius:999px;padding:2.5px 7px;color:var(--ink-soft);text-transform:uppercase}
+.back-row{display:flex;align-items:center;gap:6px;margin-left:-8px;padding:6px 8px 2px;align-self:flex-start;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+.back-row svg{width:15px;height:15px}
+
+/* ---------- documento ---------- */
+.paper{background:var(--doc);border:1px solid var(--line);border-radius:6px;padding:26px 22px 22px;
+  box-shadow:0 14px 34px -22px rgba(25,23,19,.35);margin-top:16px}
+.dc-label{display:flex;align-items:center;gap:8px;margin-top:2px}
+.dc-label .chip{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.paper-title{font-family:'Fraunces',serif;font-size:23px;font-weight:600;line-height:1.22;outline:none;border-radius:4px}
+.paper-title:focus{box-shadow:0 0 0 2px rgba(214,69,44,.35)}
+.paper-meta{margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;
+  color:var(--ink-soft);text-transform:uppercase;line-height:1.9}
+.doc-h{margin:22px 0 8px;padding-top:14px;border-top:1px solid var(--line);
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--red-deep)}
+.doc-p{font-size:14.5px;line-height:1.7;margin:6px 0}
+.doc-p.muted{color:var(--ink-soft);font-style:italic}
+.doc-li{display:flex;gap:10px;font-size:14.5px;line-height:1.65;padding:7px 0;border-bottom:1px dashed var(--line-soft)}
+.doc-li:last-child{border-bottom:none}
+.doc-li .who{font-weight:700}
+.doc-li .meta{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);flex:none;padding-top:5px}
+.doc-li div{flex:1;min-width:0}
+mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
+.doc-foot{margin-top:22px;padding-top:12px;border-top:1px solid var(--line);
+  font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--ink-soft);text-transform:uppercase}
+.paper-edit{width:100%;min-height:46vh;background:transparent;border:none;outline:none;resize:vertical;
+  font-size:13.5px;line-height:1.8;font-family:'IBM Plex Mono',monospace;padding:4px 0}
+
+/* ---------- histórico & busca ---------- */
+.search{display:flex;align-items:center;gap:10px;margin-top:16px;border:1px solid var(--line);border-radius:13px;
+  background:var(--card);padding:0 14px;height:48px}
+.search svg{color:var(--ink-soft);flex:none}
+.search input{flex:1;border:none;outline:none;background:transparent;font-size:15.5px}
+.search input::placeholder{color:#A79E8F}
+.danger-row{display:flex;gap:8px;align-items:center}
+
+/* ---------- participantes ---------- */
+.field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px}
+.input{width:100%;height:50px;border:1.5px solid var(--line);border-radius:13px;background:var(--doc);
+  padding:0 14px;font-size:16px;outline:none;transition:border-color .15s}
+.input:focus{border-color:var(--ink)}
+.phrase-card{margin-top:12px;background:var(--doc);border:1px solid var(--line);border-radius:14px;
+  padding:18px;font-family:'Fraunces',serif;font-size:17.5px;line-height:1.5}
+.phrase-card .ph-tag{display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.18em;
+  color:var(--red-deep);margin-bottom:9px;text-transform:uppercase}
+.profile-chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);border-radius:999px;
+  padding:9px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em}
+.smp-eq{display:flex;align-items:center;justify-content:center;gap:5px;height:48px;margin-top:6px}
+.smp-eq span{width:5px;height:6px;border-radius:3px;background:var(--red);transition:height .1s}
+.smp-count{font-family:'IBM Plex Mono',monospace;font-size:13px;text-align:center;letter-spacing:.1em;color:var(--ink-soft);margin-top:6px}
+.shuf{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:9px;color:var(--ink-soft);flex:none}
+.shuf svg{width:14px;height:14px}
+
+/* ---------- sheets & toast ---------- */
+.backdrop{position:absolute;inset:0;background:rgba(20,17,14,.45);z-index:90;opacity:0;pointer-events:none;transition:opacity .25s}
+.backdrop.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:22px 22px 0 0;z-index:95;
+  padding:10px 20px calc(22px + env(safe-area-inset-bottom,0px));transform:translateY(105%);
+  transition:transform .3s cubic-bezier(.32,.72,.28,1);max-height:82%;overflow-y:auto}
+.sheet.open{transform:none}
+.grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 16px}
+.sheet-title{font-family:'Fraunces',serif;font-size:19px;font-weight:600}
+.sheet-sub{margin-top:5px;font-size:12.5px;color:var(--ink-soft);line-height:1.5}
+.sheet-actions{display:flex;flex-direction:column;margin-top:14px}
+.sheet-opt{display:flex;align-items:center;gap:14px;padding:15px 2px;border-bottom:1px solid var(--line-soft);text-align:left}
+.sheet-opt:active{background:rgba(0,0,0,.03)}
+.sheet-opt .ic{width:40px;height:40px;border-radius:12px;background:var(--paper);border:1px solid var(--line);
+  display:grid;place-items:center;flex:none;color:var(--ink)}
+.sheet-opt .t{font-weight:600;font-size:15px}
+.sheet-opt .d{margin-top:2px;font-size:12px;color:var(--ink-soft)}
+.check-row{display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line-soft);text-align:left;width:100%}
+.ck{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;
+  flex:none;transition:all .15s;color:transparent}
+.ck svg{width:13px;height:13px;stroke-width:3}
+.ck.on{background:var(--red);border-color:var(--red);color:#fff}
+.sheet textarea{width:100%;min-height:96px;margin-top:16px;border:1px solid var(--line);border-radius:13px;
+  background:var(--doc);padding:13px 14px;font-size:15px;line-height:1.55;outline:none;resize:none}
+.sheet textarea:focus{border-color:var(--ink)}
+.sheet .btn.red{width:100%;margin-top:12px}
+.sheet-note{margin-top:12px;font-size:11px;color:var(--ink-soft);line-height:1.5;text-align:center}
+.toast{position:absolute;left:50%;bottom:96px;transform:translate(-50%,16px);background:var(--ink);color:var(--paper);
+  padding:11px 18px;border-radius:12px;font-size:13.5px;display:flex;align-items:center;gap:9px;z-index:120;
+  opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;max-width:88%}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast svg{width:15px;height:15px;color:#E8A79A}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="app">
+
+      <!-- ======== HOME ======== -->
+      <section class="screen active" id="scr-home">
+        <h1 class="wordmark">Ata Viva<span class="dot">.</span></h1>
+        <p class="tagline">Suas reuniões gravadas, transcritas e transformadas em documentos prontos — sem digitar uma linha.</p>
+
+        <div class="hero">
+          <button class="hero-btn" id="btnStart" aria-label="Iniciar reunião"><span class="stop"></span></button>
+          <div class="hero-label">Iniciar Reunião</div>
+          <div class="hero-hint">TOQUE PARA COMEÇAR A GRAVAR</div>
+        </div>
+
+        <p class="home-stats" id="homeStats"></p>
+        <button class="team" id="teamCard"></button>
+        <button class="team" id="backupCard"></button>
+
+        <div class="list-head">
+          <span class="eyebrow">Recentes</span>
+          <button class="link" id="linkHistory">Ver histórico</button>
+        </div>
+        <div id="homeRecent"></div>
+      </section>
+
+      <!-- ======== PARTICIPANTES ======== -->
+      <section class="screen" id="scr-people">
+        <button class="back-row" id="ppBack"><i data-lucide="chevron-left"></i>Início</button>
+        <h2 class="screen-title">Participantes</h2>
+        <p class="screen-sub">Cadastre quem participa das reuniões. Cada pessoa lê uma frase curta uma única vez — o app aprende o tom e o timbre da voz para reconhecê-la durante a transcrição. Tudo fica no seu aparelho.</p>
+        <div id="ppList" style="margin-top:14px"></div>
+        <div class="bar">
+          <button class="btn solid" id="ppAdd" style="width:100%"><i data-lucide="user-plus"></i>Adicionar participante</button>
+        </div>
+      </section>
+
+      <!-- ======== PARTICIPANTE (cadastro/edição) ======== -->
+      <section class="screen" id="scr-person">
+        <button class="back-row" id="psBack"><i data-lucide="chevron-left"></i>Participantes</button>
+        <h2 class="screen-title" id="psTitle">Novo participante</h2>
+        <div style="margin-top:18px;display:flex;flex-direction:column;gap:14px">
+          <div class="field"><label for="psName">Nome</label>
+            <input class="input" id="psName" placeholder="Ex.: Marina Duarte"></div>
+          <div class="field"><label for="psRole">Função (opcional)</label>
+            <input class="input" id="psRole" placeholder="Ex.: Produto"></div>
+        </div>
+        <div class="tx-head" style="margin-top:22px">
+          <span class="eyebrow">Frase de reconhecimento</span><hr class="hairline">
+          <button class="shuf" id="psShuffle" aria-label="Trocar frase"><i data-lucide="rotate-ccw"></i></button>
+        </div>
+        <p class="screen-sub">Na gravação da amostra, leia esta frase em voz alta, no volume natural de uma reunião.</p>
+        <div class="phrase-card" id="psPhrase"></div>
+        <div id="smpArea" style="margin-top:16px"></div>
+        <div class="bar" id="psBar"></div>
+      </section>
+
+      <!-- ======== GRAVAÇÃO ======== -->
+      <section class="screen" id="scr-record">
+        <div class="rec-top">
+          <div class="rec-badge"><span class="dot" id="recDot"></span><span id="recLabel">GRAVANDO</span></div>
+          <span class="chip" id="recMode">AO VIVO</span>
+        </div>
+        <div class="att-chips" id="attChips"></div>
+        <div class="timer" id="timer">00:00</div>
+        <div class="timer-sub">TEMPO DE GRAVAÇÃO</div>
+        <div class="wave-wrap"><canvas id="wave"></canvas></div>
+        <div class="sr-banner" id="srBanner" style="display:none">
+          <p>Transcrição ao vivo indisponível neste navegador (requer Chrome ou Edge). O áudio continua sendo gravado.</p>
+          <button id="btnSimulate">Simular transcrição</button>
+        </div>
+        <div class="tx-head"><span class="eyebrow">Transcrição ao vivo</span><hr class="hairline"></div>
+        <div class="tx-list" id="txList"></div>
+        <div class="tx-interim" id="interim"></div>
+        <div class="bar">
+          <button class="btn ghost" id="btnPause"><i data-lucide="pause"></i><span id="pauseTxt">Pausar</span></button>
+          <button class="btn solid" id="btnFinalize"><i data-lucide="square"></i>Finalizar</button>
+        </div>
+      </section>
+
+      <!-- ======== FORMATOS ======== -->
+      <section class="screen" id="scr-formats">
+        <button class="back-row" id="fmBack"><i data-lucide="chevron-left"></i>Voltar</button>
+        <h2 class="screen-title">Como você quer o resultado?</h2>
+        <p class="screen-sub" id="fmMeta"></p>
+        <div id="fmList" style="margin-top:10px"></div>
+      </section>
+
+      <!-- ======== DOCUMENTO ======== -->
+      <section class="screen" id="scr-doc">
+        <button class="back-row" id="dcBack"><i data-lucide="chevron-left"></i>Formatos</button>
+        <div class="dc-label" id="dcLabel"></div>
+        <div class="paper">
+          <h2 class="paper-title" id="dcTitle" contenteditable="true" spellcheck="false"></h2>
+          <p class="paper-meta" id="dcMeta"></p>
+          <div id="dcBody"></div>
+          <div class="doc-foot" id="dcFoot"></div>
+        </div>
+        <div class="bar" id="dcBar"></div>
+      </section>
+
+      <!-- ======== HISTÓRICO ======== -->
+      <section class="screen" id="scr-history">
+        <button class="back-row" id="hsBack"><i data-lucide="chevron-left"></i>Início</button>
+        <h2 class="screen-title">Histórico</h2>
+        <div class="search"><i data-lucide="search"></i><input id="hsSearch" placeholder="Buscar por título ou conteúdo…"></div>
+        <div id="hsList"></div>
+      </section>
+
+      <!-- overlays -->
+      <div class="processing" id="processing">
+        <div class="eq"><span></span><span></span><span></span><span></span></div>
+        <div class="pr-steps">
+          <div class="pr-step" id="pr1"><span class="pr-dot"><i data-lucide="check"></i></span>Gravação finalizada</div>
+          <div class="pr-step" id="pr2"><span class="pr-dot"><i data-lucide="check"></i></span>Transcrição concluída</div>
+          <div class="pr-step" id="pr3"><span class="pr-dot"><i data-lucide="check"></i></span>Análise inteligente do conteúdo</div>
+        </div>
+      </div>
+
+      <div class="backdrop" id="backdrop"></div>
+      <div class="sheet" id="sheet"></div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+  <p class="caption">ATA VIVA · GRAVAÇÃO, TRANSCRIÇÃO E ANÁLISE 100% NO NAVEGADOR</p>
+</div>
+
+<script>
+/* ============================== utilidades ============================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const refreshIcons = () => { try{ lucide.createIcons(); }catch(e){} };
+const fmtClock = s => { const m=Math.floor(s/60), ss=Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0'); };
+const fmtTimer = s => { const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=Math.floor(s%60);
+  return (h? h+':'+String(m).padStart(2,'0') : String(m).padStart(2,'0'))+':'+String(ss).padStart(2,'0'); };
+const fmtDur = s => { const m=Math.round(s/60); return m>=60 ? Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'min' : m+' min'; };
+const longDate = iso => { const d=new Date(iso);
+  let s=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+  return s.charAt(0).toUpperCase()+s.slice(1); };
+const shortDate = iso => new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+const weekday = iso => new Date(iso).toLocaleDateString('pt-BR',{weekday:'short'});
+const slug = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const initials = n => (n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const voiceKind = f => f<125?'voz grave':f<175?'voz média-grave':f<215?'voz média':'voz aguda';
+
+let toastTimer;
+function toast(msg){ const t=$('#toast');
+  t.innerHTML='<i data-lucide="check"></i><span>'+esc(msg)+'</span>';
+  t.classList.add('show'); refreshIcons();
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400); }
+
+function openSheet(html){ $('#sheet').innerHTML='<div class="grab"></div>'+html;
+  $('#sheet').classList.add('open'); $('#backdrop').classList.add('show'); refreshIcons(); }
+function closeSheet(){ $('#sheet').classList.remove('open'); $('#backdrop').classList.remove('show'); }
+ $('#backdrop').addEventListener('click', closeSheet);
+
+/* ============================== dados ============================== */
+const LS_KEY='ataviva.meetings.v1', LS_PEOPLE='ataviva.people.v1', LS_META='ataviva.meta.v1';
+let meetings=[], people=[];
+
+const getMeta=()=>{ try{ return JSON.parse(localStorage.getItem(LS_META))||{}; }catch(e){ return {}; } };
+const setMeta=o=>{ try{ localStorage.setItem(LS_META,JSON.stringify(o)); }catch(e){} };
+
+const PHRASES=[
+  'A reunião de hoje vai definir metas, prazos e responsáveis para o próximo ciclo do time.',
+  'Precisamos alinhar o orçamento antes de aprovar o lançamento da nova página de planos.',
+  'Vou verificar as pendências com o jurídico e retorno com uma posição até amanhã de manhã.',
+  'O time combinou revisar os números do trimestre na próxima segunda-feira, às dez horas.',
+  'Nossa prioridade agora é resolver a integração com o sistema de faturamento em produção.',
+  'Ficou decidido que a proposta do plano anual foi aprovada por todos os presentes.'
+];
+
+function loadPeople(){
+  try{ const raw=localStorage.getItem(LS_PEOPLE); if(raw){ people=JSON.parse(raw); return; } }catch(e){}
+  people=[
+    {id:'pp1',name:'Marina Duarte',role:'Produto',phrase:PHRASES[0],profile:null},
+    {id:'pp2',name:'Rafael Lopes',role:'Engenharia',phrase:PHRASES[1],profile:null},
+    {id:'pp3',name:'Camila Reis',role:'Jurídico',phrase:PHRASES[2],profile:null},
+    {id:'pp4',name:'Diego Moraes',role:'Dados',phrase:PHRASES[3],profile:null}
+  ];
+  savePeople();
+}
+function savePeople(){ try{ localStorage.setItem(LS_PEOPLE, JSON.stringify(people)); }catch(e){} }
+
+const SEED_1=[
+  [1,'Boa tarde, pessoal, vamos começar a reunião de planejamento da Sprint 14. Hoje vamos definir o escopo, os responsáveis e os prazos do ciclo.','Marina Duarte'],
+  [6,'O tema principal é o lançamento da nova página de planos. O design já foi aprovado pela diretoria na semana passada.','Marina Duarte'],
+  [11,'Marina vai preparar a apresentação final da página de planos até quinta-feira, incluindo as versões para mobile.','Rafael Lopes'],
+  [16,'Rafael, você precisa atualizar o fluxo de checkout com o novo botão de assinatura anual ainda esta semana.','Marina Duarte'],
+  [21,'O jurídico ainda não retornou sobre os termos de cancelamento. Isso ficou pendente da reunião anterior e está bloqueando a página de planos.','Rafael Lopes'],
+  [26,'Camila vai cobrar o jurídico amanhã pela manhã e avisar o time assim que tiver resposta.','Marina Duarte'],
+  [31,'Ficou definido que o lançamento da nova página de planos acontece no dia 22 deste mês.','Marina Duarte'],
+  [36,'Também decidimos que o plano anual vai entrar com quinze por cento de desconto nos três primeiros meses.','Rafael Lopes'],
+  [41,'Quanto ao orçamento de mídia, combinamos manter o investimento atual até o fim do trimestre.','Marina Duarte'],
+  [46,'Diego levantou que a integração com o sistema de faturamento ainda não foi testada em produção.','Diego Moraes'],
+  [51,'A gente precisa resolver isso antes de ativar a cobrança recorrente. Rafael tem que testar a integração em produção até sexta-feira.','Marina Duarte'],
+  [57,'Semana que vem vamos fazer uma revisão geral com todas as áreas antes do lançamento.','Marina Duarte'],
+  [62,'Próximo passo: agendar a revisão geral para a próxima terça-feira, às dez horas, com marketing, produto e suporte.','Camila Reis'],
+  [67,'Camila ainda aguarda a resposta do jurídico sobre os termos de cancelamento — continua em aberto por aqui.','Camila Reis'],
+  [72,'Se não tiver resposta até quinta, vamos escalar para a diretoria na sexta-feira de manhã.','Marina Duarte'],
+  [78,'Encerrando: o lançamento é dia 22, Marina entrega a apresentação na quinta e Rafael fecha os testes de integração na sexta. Obrigado, pessoal.','Marina Duarte']
+];
+const SEED_2=[
+  [1,'Vamos alinhar as metas do comercial para o terceiro trimestre. A diretoria definiu uma meta de quatrocentos e oitenta mil em novas vendas.'],
+  [8,'Ficou acordado que a meta será dividida entre os três executivos, proporcional ao território de cada um.'],
+  [15,'Paulo vai revisar a tabela de comissionamento e enviar a proposta até dia 10 de julho.'],
+  [21,'A integração com o novo CRM ainda está pendente — o fornecedor não enviou o contrato final.'],
+  [27,'Júlia vai fazer o follow-up com o fornecedor do CRM e cobrar uma posição até amanhã.'],
+  [33,'Também combinamos adotar a reunião semanal de pipeline toda segunda-feira, às nove horas.'],
+  [40,'Os leads que ficaram parados no primeiro trimestre precisam ser revisados. Fernanda vai organizar a lista e compartilhar até sexta.'],
+  [47,'Próximos passos: fechar o contrato do CRM, publicar a nova tabela de comissões e dar início à meta do trimestre na próxima segunda.']
+];
+const SEED_3=[
+  [1,'Ontem finalizei os testes do formulário de cadastro. Hoje vou corrigir o bug do botão de salvar no Safari.'],
+  [7,'O ambiente de homologação ficou instável de manhã, estamos aguardando o time de infraestrutura.'],
+  [13,'Ana vai atualizar o quadro de tarefas e sinalizar as pendências do sprint.'],
+  [19,'Precisamos resolver a revisão do texto de onboarding até quinta-feira.'],
+  [25,'Bruno vai agendar a conversa com o time de suporte sobre os tickets recorrentes.'],
+  [31,'Fechamos por aqui, amanhã continuamos a partir das nove.']
+];
+const daysAgo = n => new Date(Date.now() - n*864e5).toISOString();
+function seedMeeting(title,segs,days,dur,attendees){
+  return { id:uid(), title, dateISO:daysAgo(days), duration:dur, docs:{}, demo:false,
+    attendees:attendees||[], segments: segs.map(([t,text,spk])=>({t,text,spk:spk||null})) };
+}
+function load(){
+  try{ const raw=localStorage.getItem(LS_KEY); if(raw){ meetings=JSON.parse(raw); return; } }catch(e){}
+  meetings=[
+    seedMeeting('Reunião de Planejamento — Sprint 14',SEED_1,2,2120,['Marina Duarte','Rafael Lopes','Camila Reis','Diego Moraes']),
+    seedMeeting('Alinhamento Comercial — Q3',SEED_2,6,1310,['Paulo Souza','Júlia Antunes','Fernanda Lima']),
+    seedMeeting('Daily — Time de Produto',SEED_3,1,480,['Ana Prado','Bruno Costa'])
+  ];
+  save();
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(meetings)); }catch(e){} }
+const getMeeting = id => meetings.find(m=>m.id===id);
+
+/* ============================== proteção de dados ============================== */
+async function requestDurableStorage(){
+  try{
+    if(navigator.storage && navigator.storage.persist){
+      const already = await navigator.storage.persisted();
+      if(!already) await navigator.storage.persist();
+    }
+  }catch(e){}
+}
+function renderBackupCard(){
+  const lb=getMeta().lastBackup;
+  $('#backupCard').innerHTML='<span class="av" style="margin-left:0"><i data-lucide="archive"></i></span>'+
+    '<span class="row-main"><span class="row-title" style="display:block">Backup &amp; restauração</span>'+
+    '<span class="row-sub" style="display:block">'+(lb
+      ?'ÚLTIMA CÓPIA: '+shortDate(lb)+' · '+new Date(lb).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+      :'NENHUMA CÓPIA AINDA — TOQUE PARA FAZER')+'</span></span>'+
+    '<i data-lucide="chevron-right" class="ch"></i>';
+  refreshIcons();
+}
+function openBackupSheet(){
+  openSheet('<h3 class="sheet-title">Backup &amp; restauração</h3>'+
+    '<p class="sheet-sub">Reuniões, transcrições, participantes e perfis de voz ficam <b>somente neste aparelho</b>. '+
+    'Exporte o arquivo de backup de vez em quando: ele devolve tudo aqui mesmo, ou em outro celular.</p>'+
+    '<p class="sheet-note" id="persistStatus" style="text-align:left;margin:10px 0 0">Verificando proteção do armazenamento…</p>'+
+    '<div class="sheet-actions">'+
+    '<button class="sheet-opt" id="bkExp"><span class="ic"><i data-lucide="download"></i></span>'+
+    '<span><span class="t">Exportar backup completo</span><br><span class="d">Um arquivo .json com tudo que existe aqui</span></span></button>'+
+    '<button class="sheet-opt" id="bkImp"><span class="ic"><i data-lucide="upload"></i></span>'+
+    '<span><span class="t">Restaurar de um arquivo</span><br><span class="d">Escolha um backup .json salvo</span></span></button>'+
+    '</div>'+
+    '<p class="sheet-note">Fechar o navegador ou reiniciar o celular <b>não apaga nada</b>. O backup protege contra limpeza de dados do navegador, troca de aparelho ou desinstalação do app.</p>'+
+    '<input type="file" id="bkFile" accept="application/json,.json" style="display:none">');
+  if(navigator.storage && navigator.storage.persisted){
+    navigator.storage.persisted().then(p=>{
+      const el=$('#persistStatus');
+      if(el) el.innerHTML=p
+        ?'<b style="color:var(--red-deep)">Armazenamento persistente: ativo</b> — o sistema não pode apagar seus dados para liberar espaço.'
+        :'Armazenamento padrão. Toque em “Exportar” abaixo para reforçar a proteção.';
+    }).catch(()=>{});
+  }else{
+    const el=$('#persistStatus'); if(el) el.textContent='Armazenamento local ativo neste navegador.';
+  }
+  $('#bkExp').addEventListener('click',()=>{ exportBackup(); closeSheet(); });
+  $('#bkImp').addEventListener('click',()=>$('#bkFile').click());
+  $('#bkFile').addEventListener('change',e=>{
+    const f=e.target.files[0]; if(!f) return;
+    importBackup(f); closeSheet();
+  });
+}
+function exportBackup(){
+  const payload={ app:'ataviva', version:1, exportedAt:new Date().toISOString(), people, meetings };
+  const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ata-viva-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  setMeta({lastBackup:new Date().toISOString()});
+  renderBackupCard();
+  toast('Backup exportado — guarde este arquivo');
+}
+function importBackup(file){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const obj=JSON.parse(rd.result);
+      if(obj.app!=='ataviva' || !Array.isArray(obj.meetings) || !Array.isArray(obj.people)) throw 0;
+      meetings=obj.meetings; people=obj.people;
+      state.confirmDelete=null; state.confirmDelPerson=null;
+      save(); savePeople(); renderHome();
+      toast('Backup restaurado · '+meetings.length+' reunião(ões)');
+    }catch(e){ toast('Arquivo de backup inválido'); }
+  };
+  rd.readAsText(file);
+}
+
+/* ============================== motor de análise ============================== */
+const CUES={
+  decision:/\b(decidim\w*|decidido|decis(?:ã|a)o|ficou definid\w*|definid\w* que|aprovad\w*|combinad\w*|acordad\w*|concordam\w*|optamos|escolhemos|vamos (usar|adotar|lançar|mudar|contratar|cancelar|manter|ativar|escalar))\b/i,
+  task:/\b(vai (fazer|enviar|preparar|criar|revisar|verificar|ligar|agendar|atualizar|testar|apresentar|passar|cuidar|organizar|compartilhar|levantar|cotar|solicitar|cobrar|corrigir)|responsável (por|em)|precisa (enviar|fazer|entregar|revisar|passar|atualizar)|tem que (enviar|fazer|entregar|revisar|testar)|encarregad\w*|tarefa)\b/i,
+  pending:/\b(pendente\w*|em aberto|aguardand\w*|falta(m)?\b|não conseguimos|não foi possível|precisamos resolver|bloquead\w*|impediment\w*|ainda não|sem resposta|não enviou|não receb\w*|não retornou)\b/i,
+  next:/\b(próxim\w* passos?\b|daqui pra frente|daqui para frente|amanhã continuamos|próxima reunião|semana que vem vamos|começamos a|iniciamos o|vamos começar|seguimos com|retomamos|dar início)\b/i,
+  deadline:/\b(até|para o dia|no dia|dia \d|amanhã|depois de amanhã|semana que vem|mês que vem|fim do (mês|trimestre|semestre)|início do|próxima\w* (segunda|terça|quarta|quinta|sexta)|segunda-?feira|terça-?feira|quarta-?feira|quinta-?feira|sexta-?feira|sábado|domingo|\d{1,2}\/\d{1,2}|janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i
+};
+const DEADLINE_FULL=/((?:até|para|no) (?:o |a )?(?:dia )?\d{1,2}(?:\/\d{1,2}(?:\/\d{2,4})?)?(?: de (?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro))?)|((?:segunda|terça|quarta|quinta|sexta)(?:-feira)?)|((?:próxim\w* )?(?:semana|mês|trimestre)(?: que vem)?)|(amanhã)|(depois de amanhã)|(fim do (?:mês|trimestre|semestre))|(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/i;
+const NAME_STOP=new Set(['Não','Nao','Vamos','Hoje','Amanhã','Amanha','Ontem','Sim','Também','Tambem','Assim','Então','Entao','Depois','Antes','Agora','Talvez','Claro','Obrigado','Obrigada','Bom','Boa','Ok','Certo','Excelente','Perfeito','Segunda','Terça','Terca','Quarta','Quinta','Sexta','Sábado','Sabado','Domingo','Janeiro','Fevereiro','Março','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro','Equipe','Time','Reunião','Reuniao','Cliente','Projeto','Sprint','Alguém','Alguem','Ninguém','Ninguem','Relatório','Relatorio','Diretoria','Fechamos','Encerrando','Quanto','Tema','Levanta','Levantou','A']);
+const STOP=new Set(('de da do das dos que para por com uma uns umas aos as os se seu sua seus suas isso esse essa este esta até depois antes quando onde quem qual ser ter estar fazer vai vamos são está foi tem há muito também já não sim nós você sobre entre sem nas nos pelo pela como mais mas então ao à').split(' '));
+
+function splitSentences(text){ return (String(text).match(/[^.!?…]+[.!?…]*/g)||[text]).map(s=>s.trim()).filter(s=>s.length>3); }
+function allSentences(segs){ const out=[];
+  segs.forEach(s=>splitSentences(s.text).forEach(sent=>out.push({t:s.t,sent,spk:s.spk})));
+  return out; }
+function dedupe(list,key){ const seen=new Set(),out=[];
+  for(const x of list){ const k=key(x).toLowerCase().slice(0,60);
+    if(!seen.has(k)){seen.add(k);out.push(x);} } return out; }
+function findName(sent){
+  const words=sent.split(/\s+/);
+  for(let i=0;i<words.length;i++){
+    const w=words[i].replace(/[^A-Za-zÀ-ÿ]/g,'');
+    if(/^[A-ZÀ-Ú][a-zà-ú]{2,}$/.test(w) && !NAME_STOP.has(w)) return w;
+  } return null;
+}
+function hl(text){ let h=esc(text), m=h.match(DEADLINE_FULL);
+  if(m) h=h.replace(m[0],'<mark>'+m[0]+'</mark>'); return h; }
+function analyze(meeting){
+  const sents=allSentences(meeting.segments), total=sents.length;
+  const score=(s,i)=>{ let sc=0; const len=s.sent.split(/\s+/).length;
+    if(len>=6&&len<=28)sc+=2; else if(len>28)sc+=.4;
+    if(/\d/.test(s.sent))sc+=1.5;
+    if(CUES.decision.test(s.sent))sc+=2;
+    if(CUES.task.test(s.sent))sc+=1.4;
+    if(CUES.deadline.test(s.sent))sc+=1;
+    if(CUES.next.test(s.sent))sc+=1;
+    if(i<total*.25||i>total*.8)sc+=.8; return sc; };
+  const filter=cue=>dedupe(sents.filter(s=>cue.test(s.sent)),s=>s.sent).slice(0,9);
+  const tasks=dedupe(sents.filter(s=>CUES.task.test(s.sent)),s=>s.sent).slice(0,10);
+  const summary=sents.map((s,i)=>({...s,sc:score(s,i)})).sort((a,b)=>b.sc-a.sc).slice(0,5).sort((a,b)=>a.t-b.t);
+  const names=[...new Set(sents.map(s=>findName(s.sent)).filter(Boolean))].slice(0,6);
+  const freq={};
+  sents.forEach(s=>s.sent.toLowerCase().split(/[^a-zà-ÿ0-9]+/).forEach(w=>{
+    if(w.length>3&&!STOP.has(w))freq[w]=(freq[w]||0)+1; }));
+  const kw=Object.entries(freq).sort((a,b)=>b[1]-a[1]).filter(e=>e[1]>=2).slice(0,8).map(e=>e[0]);
+  return {sents,total,summary,decisions:filter(CUES.decision),tasks,names,
+    deadlines:filter(CUES.deadline),pendings:filter(CUES.pending),nexts:filter(CUES.next),kw};
+}
+
+/* ============================== geradores de documento ============================== */
+const DOC_LABELS={
+  ata:{label:'Ata formal da reunião',desc:'Documento completo para registro oficial'},
+  resumo:{label:'Resumo executivo',desc:'Os pontos essenciais em poucas linhas'},
+  decisoes:{label:'Principais decisões',desc:'O que foi decidido e combinado'},
+  tarefas:{label:'Tarefas e responsáveis',desc:'Quem faz o quê'},
+  prazos:{label:'Prazos definidos',desc:'Datas e compromissos assumidos'},
+  pendencias:{label:'Pendências',desc:'O que ainda está em aberto'},
+  passos:{label:'Próximos passos',desc:'Os próximos movimentos do time'},
+  transcricao:{label:'Transcrição completa',desc:'Tudo o que foi dito, com autor e horário'},
+  custom:{label:'Resumo personalizado com IA',desc:'Descreva o foco desejado'}
+};
+const H=t=>({type:'h',text:t}), P=(t,m)=>({type:'p',text:t,muted:m}),
+      L=(t,meta,who)=>({type:'li',text:t,meta,who});
+
+function buildDoc(meeting,type,prompt){
+  const A=analyze(meeting);
+  const blocks=[];
+  if(type==='ata'){
+    blocks.push(P('Reunião "'+meeting.title+'", realizada em '+longDate(meeting.dateISO)+
+      ', com duração de '+fmtDur(meeting.duration)+'.'));
+    if(meeting.attendees&&meeting.attendees.length)
+      blocks.push(P('Participantes: '+meeting.attendees.join(', ')+'.'));
+    blocks.push(H('Temas recorrentes'));
+    blocks.push(A.kw.length? P(A.kw.join(' · ')) : P('—','x'));
+    blocks.push(H('Discussão'));
+    A.summary.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)));
+    blocks.push(H('Decisões'));
+    A.decisions.length? A.decisions.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)))
+      : blocks.push(P('Não foram registradas decisões explícitas nesta reunião.','x'));
+    blocks.push(H('Tarefas atribuídas'));
+    A.tasks.length? A.tasks.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk||findName(s.sent))))
+      : blocks.push(P('Nenhuma tarefa foi explicitamente atribuída.','x'));
+    blocks.push(H('Pendências'));
+    A.pendings.length? A.pendings.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)))
+      : blocks.push(P('Não há pendências registradas.','x'));
+    const end=new Date(new Date(meeting.dateISO).getTime()+meeting.duration*1000);
+    blocks.push(H('Encerramento'));
+    blocks.push(P('Reunião encerrada às '+end.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+
+      ', com duração total de '+fmtDur(meeting.duration)+'.'));
+  }
+  else if(type==='resumo'){
+    A.summary.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)));
+    if(!A.summary.length) blocks.push(P('A transcrição não contém conteúdo suficiente para resumo.'));
+  }
+  else if(type==='decisoes'){
+    A.decisions.length? A.decisions.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)))
+      : blocks.push(P('Nenhuma decisão explícita foi identificada na conversa.','x'));
+  }
+  else if(type==='tarefas'){
+    if(meeting.attendees&&meeting.attendees.length)
+      blocks.push(P('Participantes: '+meeting.attendees.join(', ')+'.'));
+    A.tasks.length? A.tasks.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk||findName(s.sent))))
+      : blocks.push(P('Nenhuma atribuição de tarefa foi identificada.','x'));
+  }
+  else if(type==='prazos'){
+    blocks.push(P('Compromissos e datas mencionados ao longo da conversa (destacados no texto).'));
+    A.deadlines.length? A.deadlines.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)))
+      : blocks.push(P('Nenhum prazo específico foi mencionado nesta reunião.','x'));
+  }
+  else if(type==='pendencias'){
+    A.pendings.length? A.pendings.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)))
+      : blocks.push(P('Nada pendente foi registrado nesta reunião.','x'));
+  }
+  else if(type==='passos'){
+    A.nexts.length? A.nexts.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)))
+      : blocks.push(P('Nenhum próximo passo foi definido explicitamente.','x'));
+  }
+  else if(type==='transcricao'){
+    blocks.push(P('Transcrição integral, na ordem em que as falas ocorreram.'));
+    meeting.segments.forEach(s=>blocks.push(L(s.text,fmtClock(s.t),s.spk)));
+  }
+  else if(type==='custom'){
+    const kws=(prompt||'').toLowerCase().split(/[^a-zà-ÿ0-9]+/).filter(w=>w.length>3&&!STOP.has(w));
+    blocks.push(H('Foco do resumo'));
+    blocks.push(P('“'+prompt+'”'));
+    const hits=A.sents.map(s=>{ const low=s.sent.toLowerCase();
+      let m=0; kws.forEach(k=>{ if(low.includes(k)) m+=2; }); return {...s,m}; })
+      .filter(s=>s.m>0).sort((a,b)=>b.m-a.m).slice(0,7).sort((a,b)=>a.t-b.t);
+    blocks.push(H('Trechos relevantes'));
+    if(hits.length) hits.forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)));
+    else blocks.push(P('Não identifiquei trechos diretamente ligados a esse pedido. Segue uma leitura geral da reunião.','x'));
+    blocks.push(H('Leitura geral'));
+    A.summary.slice(0,3).forEach(s=>blocks.push(L(s.sent,fmtClock(s.t),s.spk)));
+  }
+  return {blocks,generatedAt:new Date().toISOString()};
+}
+
+function serializeDoc(doc){
+  return doc.blocks.map(b=>{
+    if(b.type==='h') return '## '+b.text;
+    if(b.type==='li') return '- '+(b.who?'['+b.who+'] ':'')+b.text+(b.meta?' ('+b.meta+')':'');
+    return b.text;
+  }).join('\n');
+}
+function parseDoc(txt){
+  const blocks=[];
+  txt.split('\n').forEach(line=>{
+    const l=line.trim(); if(!l) return;
+    if(l.startsWith('## ')) blocks.push(H(l.slice(3).trim()));
+    else if(l.startsWith('- ')){
+      let t=l.slice(2).trim(), who=null, meta=null;
+      const wm=t.match(/^\[([^\]]+)\]\s*/); if(wm){ who=wm[1]; t=t.slice(wm[0].length); }
+      const m=t.match(/\((\d{2}:\d{2})\)$/); if(m){ meta=m[1]; t=t.replace(/\s*\(\d{2}:\d{2}\)$/,''); }
+      blocks.push(L(t,meta,who));
+    } else blocks.push(P(l));
+  });
+  return blocks;
+}
+function docPlainText(meeting,type,doc){
+  let out=DOC_LABELS[type].label.toUpperCase()+'\n'+meeting.title+'\n'+longDate(meeting.dateISO)+' · '+fmtDur(meeting.duration)+'\n\n';
+  doc.blocks.forEach(b=>{
+    if(b.type==='h') out+=b.text.toUpperCase()+'\n';
+    else if(b.type==='li') out+='• '+(b.who? b.who+': ':'')+b.text+(b.meta?' ('+b.meta+')':'')+'\n';
+    else out+=b.text+'\n\n';
+  });
+  return out+'\n— Gerado por Ata Viva';
+}
+
+/* ============================== navegação ============================== */
+const state={screen:'home',currentMid:null,docType:null,editing:false,back:'home',
+  recording:false,paused:false,demo:false,personId:null,personReturn:null,personConfirm:false,
+  confirmDelete:null,confirmDelPerson:null,draft:null,
+  attendeeNames:[],attendeePeople:[],attendeeIds:[]};
+function go(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('#scr-'+name).classList.add('active');
+  $('#scr-'+name).scrollTop=0; state.screen=name; refreshIcons();
+}
+
+/* ============================== home / histórico ============================== */
+function meetingRow(m){
+  const gen=Object.keys(m.docs||{});
+  const chips=gen.length? ' · '+gen.length+' doc'+(gen.length>1?'s':'') : '';
+  const pres=(m.attendees&&m.attendees.length)? ' · '+m.attendees.length+' presente'+(m.attendees.length>1?'s':'') : '';
+  return '<button class="row" data-open="'+m.id+'" style="width:100%">'+
+    '<div class="row-main"><div class="row-title">'+esc(m.title)+'</div>'+
+    '<div class="row-sub">'+esc(weekday(m.dateISO))+' · '+shortDate(m.dateISO)+' · '+fmtDur(m.duration)+pres+chips+'</div></div>'+
+    '<i data-lucide="chevron-right" class="ch"></i></button>';
+}
+function renderTeamCard(){
+  const withV=people.filter(p=>p.profile).length;
+  const avs=people.length? people.slice(0,4).map(p=>'<span class="av">'+esc(initials(p.name))+'</span>').join('')
+    : '<span class="av"><i data-lucide="users"></i></span>';
+  $('#teamCard').innerHTML='<span class="avs">'+avs+'</span>'+
+    '<span class="row-main"><span class="row-title" style="display:block">Equipe &amp; vozes</span>'+
+    '<span class="row-sub" style="display:block">'+people.length+' PESSOA'+(people.length===1?'':'S')+
+    ' · '+withV+' COM VOZ CADASTRADA</span></span>'+
+    '<i data-lucide="chevron-right" class="ch"></i>';
+  refreshIcons();
+}
+function renderHome(){
+  const n=meetings.length, tot=meetings.reduce((a,m)=>a+m.duration,0);
+  const vs=people.filter(p=>p.profile).length;
+  let st=n+' REUNI'+(n===1?'ÃO':'ÕES')+' · '+fmtDur(tot)+' GRAVADOS';
+  if(vs) st+=' · '+vs+' VOZ'+(vs>1?'ES':'')+' CADASTRADA'+(vs>1?'S':'');
+  $('#homeStats').textContent=st;
+  renderTeamCard();
+  renderBackupCard();
+  $('#homeRecent').innerHTML=meetings.length
+    ? meetings.slice().sort((a,b)=>new Date(b.dateISO)-new Date(a.dateISO)).slice(0,3).map(meetingRow).join('')
+    : '<div class="empty"><i data-lucide="mic"></i><br>Nenhuma reunião ainda.<br>Toque no botão acima para começar.</div>';
+  refreshIcons();
+}
+function renderHistory(filter){
+  const f=(filter||'').trim().toLowerCase();
+  const list=meetings.slice().sort((a,b)=>new Date(b.dateISO)-new Date(a.dateISO))
+    .filter(m=>!f || m.title.toLowerCase().includes(f) ||
+      m.segments.some(s=>s.text.toLowerCase().includes(f)));
+  $('#hsList').innerHTML=list.length? list.map(m=>{
+    if(state.confirmDelete===m.id){
+      return '<div class="row" style="flex-wrap:wrap"><div class="row-main" style="flex-basis:100%">'+
+        '<div class="row-title">Excluir “'+esc(m.title)+'”?</div>'+
+        '<div class="row-sub">A transcrição e os documentos serão perdidos.</div></div>'+
+        '<div class="danger-row" style="flex-basis:100%;margin-top:10px">'+
+        '<button class="btn red small" data-del="'+m.id+'">Excluir</button>'+
+        '<button class="btn small" style="border:1px solid var(--line)" data-cancel>Cancelar</button></div></div>';
+    }
+    return '<div style="display:flex;align-items:stretch">'+
+      '<div style="flex:1;min-width:0">'+meetingRow(m)+'</div>'+
+      '<button class="row" style="width:46px;justify-content:center" data-confirm="'+m.id+'" aria-label="Excluir">'+
+      '<i data-lucide="trash-2" style="color:var(--ink-soft)"></i></button></div>';
+  }).join('') : '<div class="empty"><i data-lucide="search"></i><br>Nada encontrado'+(f?' para “'+esc(f)+'”':'')+'.</div>';
+  refreshIcons();
+}
+document.addEventListener('click',e=>{
+  const open=e.target.closest('[data-open]'); if(open){ openFormats(open.dataset.open,'history'); return; }
+  const conf=e.target.closest('[data-confirm]'); if(conf){ state.confirmDelete=conf.dataset.confirm; renderHistory($('#hsSearch').value); return; }
+  const del=e.target.closest('[data-del]'); if(del){
+    meetings=meetings.filter(m=>m.id!==del.dataset.del); state.confirmDelete=null; save();
+    renderHistory($('#hsSearch').value); renderHome(); toast('Reunião excluída'); return; }
+  if(e.target.closest('[data-cancel]')){ state.confirmDelete=null; renderHistory($('#hsSearch').value); }
+});
+
+/* ============================== participantes ============================== */
+function renderPeople(){
+  const el=$('#ppList');
+  if(!people.length){
+    el.innerHTML='<div class="empty"><i data-lucide="users"></i><br>Nenhum participante cadastrado.<br>Toque em “Adicionar” abaixo.</div>';
+  } else {
+    el.innerHTML=people.map(p=>{
+      if(state.confirmDelPerson===p.id){
+        return '<div class="row" style="flex-wrap:wrap"><div class="row-main" style="flex-basis:100%">'+
+          '<div class="row-title">Excluir “'+esc(p.name)+'”?</div>'+
+          '<div class="row-sub">As falas já transcritas mantêm o nome registrado.</div></div>'+
+          '<div class="danger-row" style="flex-basis:100%;margin-top:10px">'+
+          '<button class="btn red small" data-pdel="'+p.id+'">Excluir</button>'+
+          '<button class="btn small" style="border:1px solid var(--line)" data-pcancel>Cancelar</button></div></div>';
+      }
+      return '<div style="display:flex;align-items:stretch">'+
+        '<button class="row" data-person="'+p.id+'" style="flex:1;min-width:0">'+
+        '<span class="av">'+esc(initials(p.name))+'</span>'+
+        '<div class="row-main"><div class="row-title">'+esc(p.name)+'</div>'+
+        '<div class="row-sub">'+esc((p.role||'SEM FUNÇÃO').toUpperCase())+
+        (p.profile?' · VOZ CADASTRADA':' · SEM VOZ')+'</div></div>'+
+        '<i data-lucide="chevron-right" class="ch"></i></button>'+
+        '<button class="row" style="width:46px;justify-content:center" data-pconfirm="'+p.id+'" aria-label="Excluir">'+
+        '<i data-lucide="trash-2" style="color:var(--ink-soft)"></i></button></div>';
+    }).join('');
+  }
+  refreshIcons();
+}
+ $('#ppList').addEventListener('click',e=>{
+  const ed=e.target.closest('[data-person]'); if(ed){ openPerson(ed.dataset.person,'people'); return; }
+  const cf=e.target.closest('[data-pconfirm]'); if(cf){ state.confirmDelPerson=cf.dataset.pconfirm; renderPeople(); return; }
+  const dl=e.target.closest('[data-pdel]'); if(dl){
+    people=people.filter(p=>p.id!==dl.dataset.pdel); state.confirmDelPerson=null; savePeople();
+    renderPeople(); renderHome(); toast('Participante excluído'); return; }
+  if(e.target.closest('[data-pcancel]')){ state.confirmDelPerson=null; renderPeople(); }
+});
+
+function openPerson(id,returnTo){
+  state.personId=id||null; state.personReturn=returnTo||null; state.personConfirm=false;
+  cancelSample();
+  const p=id? people.find(x=>x.id===id) : null;
+  state.draft=p
+    ? {name:p.name,role:p.role||'',phrase:p.phrase,profile:p.profile?{...p.profile}:null}
+    : {name:'',role:'',phrase:PHRASES[Math.floor(Math.random()*PHRASES.length)],profile:null};
+  renderPerson(); go('person');
+}
+function renderPerson(){
+  const d=state.draft;
+  $('#psTitle').textContent=state.personId?'Editar participante':'Novo participante';
+  $('#psName').value=d.name; $('#psRole').value=d.role;
+  $('#psPhrase').innerHTML='<span class="ph-tag">Leia esta frase na gravação da amostra</span>'+esc(d.phrase);
+  renderSampleArea(); renderPersonBar();
+}
+function renderPersonBar(){
+  const bar=$('#psBar');
+  if(state.personConfirm){
+    bar.innerHTML='<button class="btn red" id="pDelYes"><i data-lucide="trash-2"></i>Confirmar exclusão</button>'+
+      '<button class="btn ghost" id="pDelNo">Cancelar</button>';
+    $('#pDelYes').onclick=doDeletePerson;
+    $('#pDelNo').onclick=()=>{ state.personConfirm=false; renderPersonBar(); };
+  }else{
+    bar.innerHTML=(state.personId
+      ? '<button class="btn ghost small2" id="pDelete" style="color:var(--red-deep)"><i data-lucide="trash-2"></i>Excluir</button>':'')+
+      '<button class="btn ghost" id="pCancel">Cancelar</button>'+
+      '<button class="btn solid" id="pSave"><i data-lucide="check"></i>Salvar</button>';
+    if(state.personId) $('#pDelete').onclick=()=>{ state.personConfirm=true; renderPersonBar(); };
+    $('#pCancel').onclick=()=>{ cancelSample(); goBackFromPerson(); };
+    $('#pSave').onclick=savePerson;
+  }
+  refreshIcons();
+}
+function goBackFromPerson(){
+  if(state.personReturn==='attendance'){ renderHome(); go('home'); openAttendance(); }
+  else { state.confirmDelPerson=null; renderPeople(); go('people'); }
+}
+function doDeletePerson(){
+  people=people.filter(p=>p.id!==state.personId); savePeople();
+  toast('Participante excluído'); state.personConfirm=false;
+  renderPeople(); renderHome(); go('people');
+}
+function savePerson(){
+  const name=$('#psName').value.trim();
+  if(!name){ toast('Dê um nome ao participante'); return; }
+  const d=state.draft; d.name=name; d.role=$('#psRole').value.trim();
+  if(state.personId){
+    const p=people.find(x=>x.id===state.personId);
+    Object.assign(p,{name:d.name,role:d.role,phrase:d.phrase,profile:d.profile});
+  }else{
+    people.push({id:uid(),name:d.name,role:d.role,phrase:d.phrase,profile:d.profile});
+  }
+  savePeople(); cancelSample(); renderHome();
+  toast(d.profile?'Participante salvo com voz cadastrada':'Salvo sem amostra de voz');
+  goBackFromPerson();
+}
+ $('#psShuffle').addEventListener('click',()=>{
+  const idx=PHRASES.indexOf(state.draft.phrase);
+  state.draft.phrase=PHRASES[(idx+1)%PHRASES.length];
+  $('#psPhrase').innerHTML='<span class="ph-tag">Leia esta frase na gravação da amostra</span>'+esc(state.draft.phrase);
+});
+
+/* ---- captura da amostra de voz + análise acústica no dispositivo ---- */
+let sampleState=null;
+function estimatePitch(buf,sr){
+  const n=buf.length; let rms=0;
+  for(let i=0;i<n;i++) rms+=buf[i]*buf[i];
+  rms=Math.sqrt(rms/n);
+  if(rms<0.015) return null;
+  let r1=0,r2=n-1;
+  for(let i=0;i<n/2;i++) if(Math.abs(buf[i])<0.2){ r1=i; break; }
+  for(let i=1;i<n/2;i++) if(Math.abs(buf[n-i])<0.2){ r2=n-i; break; }
+  const b=buf.subarray(r1,r2), S=b.length;
+  if(S<n*0.4) return null;
+  const minOff=Math.max(2,Math.floor(sr/500)), maxOff=Math.min(Math.floor(sr/70),S-2);
+  if(maxOff<=minOff) return null;
+  let bestOff=-1,bestVal=0;
+  for(let off=minOff;off<=maxOff;off++){
+    let sum=0;
+    for(let i=0;i<S-off;i+=2) sum+=b[i]*b[i+off];
+    if(sum>bestVal){ bestVal=sum; bestOff=off; }
+  }
+  return bestOff>0? sr/bestOff : null;
+}
+function spectralCentroid(fd,sr){
+  const binHz=sr/2/fd.length; let num=0,den=0;
+  for(let i=1;i<fd.length;i++){ num+=i*binHz*fd[i]; den+=fd[i]; }
+  return den>0? num/den : 0;
+}
+async function startSampleCapture(){
+  if(sampleState) return;
+  let stream,ctx,analyser;
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=ctx.createMediaStreamSource(stream);
+    analyser=ctx.createAnalyser(); analyser.fftSize=2048; src.connect(analyser);
+  }catch(e){ toast('Não consegui acessar o microfone'); return; }
+  sampleState={stream,ctx,analyser,feats:[],t0:performance.now(),raf:null,
+    td:new Float32Array(analyser.fftSize),fd:new Uint8Array(analyser.frequencyBinCount)};
+  renderSampleArea();
+  loopSample();
+}
+function loopSample(){
+  const s=sampleState; if(!s) return;
+  s.raf=requestAnimationFrame(loopSample);
+  s.analyser.getFloatTimeDomainData(s.td);
+  const f0=estimatePitch(s.td,s.ctx.sampleRate);
+  s.analyser.getByteFrequencyData(s.fd);
+  const cent=spectralCentroid(s.fd,s.ctx.sampleRate);
+  if(f0) s.feats.push({f0,cent});
+  const spans=$('#smpArea').querySelectorAll('.smp-eq span');
+  for(let i=0;i<spans.length;i++){
+    const v=s.fd[Math.floor((i+1)*s.fd.length/(spans.length+2))]/255;
+    spans[i].style.height=Math.max(6,v*46)+'px';
+  }
+  const left=Math.max(0,4500-(performance.now()-s.t0));
+  const c=$('#smpCount');
+  if(c) c.textContent=(left/1000).toFixed(1).replace('.',',')+' s';
+  if(left<=0) finishSample();
+}
+function finishSample(){
+  const s=sampleState; if(!s) return;
+  cancelAnimationFrame(s.raf);
+  s.stream.getTracks().forEach(t=>t.stop());
+  try{ s.ctx.close(); }catch(e){}
+  sampleState=null;
+  if(s.feats.length<10){ toast('Voz muito baixa — tente de novo em local silencioso'); renderSampleArea(); return; }
+  const med=a=>a.slice().sort((x,y)=>x-y)[a.length>>1];
+  state.draft.profile={f0:+med(s.feats.map(f=>f.f0)).toFixed(1),cent:Math.round(med(s.feats.map(f=>f.cent)))};
+  renderSampleArea(); toast('Amostra de voz capturada');
+}
+function cancelSample(){
+  if(!sampleState) return;
+  cancelAnimationFrame(sampleState.raf);
+  sampleState.stream.getTracks().forEach(t=>t.stop());
+  try{ sampleState.ctx.close(); }catch(e){}
+  sampleState=null;
+}
+function renderSampleArea(){
+  const d=state.draft, el=$('#smpArea');
+  if(sampleState){
+    el.innerHTML='<div class="smp-eq">'+Array.from({length:7},()=>'<span></span>').join('')+'</div>'+
+      '<div class="smp-count" id="smpCount">4,5 s</div>'+
+      '<button class="btn ghost small" id="smpCancel" style="margin:14px auto 0">Cancelar</button>';
+    $('#smpCancel').onclick=()=>{ cancelSample(); renderSampleArea(); };
+    return;
+  }
+  if(d.profile){
+    el.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+
+      '<span class="profile-chip"><i data-lucide="activity"></i>≈ '+Math.round(d.profile.f0)+' Hz · '+voiceKind(d.profile.f0)+'</span>'+
+      '<button class="btn ghost small" id="smpRedo">Regravar amostra</button></div>'+
+      '<p class="sheet-note" style="text-align:left;margin-top:10px">Perfil vocal salvo neste aparelho. Durante a reunião, falas com tom e timbre parecidos receberão o nome de '+esc(d.name||'este participante')+'.</p>';
+    $('#smpRedo').onclick=startSampleCapture;
+  }else{
+    el.innerHTML='<button class="btn red" id="smpStart" style="width:100%"><i data-lucide="mic"></i>Gravar amostra de voz · 4,5 s</button>'+
+      '<p class="sheet-note" style="text-align:left;margin-top:10px">O participante lê a frase acima em voz alta. O app mede tom e timbre da voz — nada é enviado para fora do aparelho.</p>';
+    $('#smpStart').onclick=startSampleCapture;
+  }
+  refreshIcons();
+}
+
+/* ============================== presença na sala ============================== */
+function openAttendance(){
+  if(!people.length){
+    openSheet('<h3 class="sheet-title">Quem está na sala?</h3>'+
+      '<p class="sheet-sub">Cadastre os participantes e deixe cada um ler uma frase curta — assim a transcrição identifica quem está falando.</p>'+
+      '<button class="btn red" id="attAdd"><i data-lucide="user-plus"></i>Cadastrar participante</button>'+
+      '<button class="btn ghost" id="attSkip" style="width:100%;margin-top:10px">Começar a gravar mesmo assim</button>');
+    $('#attAdd').onclick=()=>{ closeSheet(); openPerson(null,'attendance'); };
+    $('#attSkip').onclick=()=>{ state.attendeeNames=[]; state.attendeePeople=[]; closeSheet(); startRecording(); };
+    return;
+  }
+  const withV=people.filter(p=>p.profile).length;
+  openSheet('<h3 class="sheet-title">Quem está na sala?</h3>'+
+    '<p class="sheet-sub">'+withV+' de '+people.length+' com voz cadastrada. Marcados entram na ata e, quem tiver voz cadastrada, é reconhecido na transcrição.</p>'+
+    '<div class="sheet-actions">'+people.map(p=>
+      '<button class="check-row" data-att="'+p.id+'">'+
+      '<span class="av">'+esc(initials(p.name))+'</span>'+
+      '<span class="row-main"><span class="row-title" style="display:block">'+esc(p.name)+'</span>'+
+      '<span class="row-sub" style="display:block">'+esc((p.role||'—')+(p.profile?' · VOZ OK':' · SEM VOZ'))+'</span></span>'+
+      '<span class="ck on"><i data-lucide="check"></i></span></button>').join('')+'</div>'+
+    '<button class="btn red" id="attGo" style="width:100%;margin-top:14px"><i data-lucide="mic"></i>Começar a gravar</button>'+
+    '<button class="sheet-opt" id="attSkip" style="justify-content:center"><span class="t" style="font-weight:500;font-size:13px;color:var(--ink-soft)">Gravar sem registrar participantes</span></button>');
+  $('#sheet').querySelectorAll('[data-att]').forEach(b=>
+    b.addEventListener('click',()=>b.querySelector('.ck').classList.toggle('on')));
+  $('#attGo').onclick=()=>{
+    const ids=[...$('#sheet').querySelectorAll('.ck.on')].map(ck=>ck.closest('[data-att]').dataset.att);
+    state.attendeeIds=ids;
+    state.attendeeNames=people.filter(p=>ids.includes(p.id)).map(p=>p.name);
+    state.attendeePeople=people.filter(p=>ids.includes(p.id)&&p.profile);
+    closeSheet(); startRecording();
+  };
+  $('#attSkip').onclick=()=>{ state.attendeeNames=[]; state.attendeePeople=[]; closeSheet(); startRecording(); };
+}
+
+/* ============================== formatos ============================== */
+function openFormats(mid,back){
+  state.currentMid=mid; state.back=back||'home'; renderFormats(); go('formats');
+}
+function renderFormats(){
+  const m=getMeeting(state.currentMid);
+  $('#fmMeta').textContent=m.title+' · '+longDate(m.dateISO);
+  $('#fmList').innerHTML=Object.entries(DOC_LABELS).map(([k,v],i)=>{
+    const done=m.docs&&m.docs[k];
+    return '<button class="fm-item" data-fmt="'+k+'" style="width:100%">'+
+      '<span class="fm-num">'+String(i+1).padStart(2,'0')+'</span>'+
+      '<span class="fm-main"><span class="fm-title">'+v.label+
+      (done?' <span class="fm-gen">gerado</span>':'')+'</span>'+
+      '<span class="fm-desc" style="display:block">'+v.desc+'</span></span>'+
+      '<i data-lucide="chevron-right" class="ch" style="color:var(--ink-soft)"></i></button>';
+  }).join('');
+  refreshIcons();
+}
+ $('#fmList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-fmt]'); if(!b) return;
+  if(b.dataset.fmt==='custom') openCustomSheet();
+  else generateDoc(b.dataset.fmt);
+});
+function openCustomSheet(){
+  openSheet('<h3 class="sheet-title">Resumo personalizado</h3>'+
+    '<p class="sheet-sub">Descreva o que a análise deve priorizar nesta reunião.</p>'+
+    '<textarea id="customPrompt" placeholder="Ex.: foque apenas no orçamento e nos riscos do lançamento"></textarea>'+
+    '<button class="btn red" id="btnCustom"><i data-lucide="sparkles"></i>Gerar com IA</button>'+
+    '<p class="sheet-note">A análise acontece no seu dispositivo — nada é enviado para servidores.</p>');
+  $('#btnCustom').addEventListener('click',()=>{
+    const p=$('#customPrompt').value.trim();
+    if(!p){ toast('Descreva o foco desejado'); return; }
+    closeSheet(); generateDoc('custom',p);
+  });
+}
+function generateDoc(type,prompt){
+  const m=getMeeting(state.currentMid);
+  const doc=buildDoc(m,type,prompt);
+  m.docs[type]=doc; save();
+  state.docType=type; state.editing=false; renderDoc(); go('doc');
+  toast(DOC_LABELS[type].label+' gerado');
+}
+
+/* ============================== documento ============================== */
+function renderDoc(){
+  const m=getMeeting(state.currentMid), type=state.docType, doc=m.docs[type];
+  $('#dcLabel').innerHTML='<span class="chip">'+DOC_LABELS[type].label+'</span>';
+  $('#dcTitle').textContent=m.title;
+  $('#dcMeta').innerHTML=longDate(m.dateISO)+'<br>'+fmtDur(m.duration)+' de gravação · '+m.segments.length+' intervenções';
+  const body=$('#dcBody');
+  if(state.editing){
+    body.innerHTML='<textarea class="paper-edit" id="docEditor"></textarea>';
+    $('#docEditor').value=serializeDoc(doc);
+    $('#dcBar').innerHTML='<button class="btn ghost small2" id="dcCancel">Cancelar</button>'+
+      '<button class="btn solid" id="dcSave"><i data-lucide="check"></i>Salvar</button>';
+  }else{
+    body.innerHTML=doc.blocks.map(b=>{
+      if(b.type==='h') return '<h3 class="doc-h">'+esc(b.text)+'</h3>';
+      if(b.type==='li') return '<div class="doc-li"><div>'+
+        (b.who?'<span class="who">'+esc(b.who)+':</span> ':'')+
+        (type==='prazos'? hl(b.text):esc(b.text))+'</div>'+
+        (b.meta?'<span class="meta">'+b.meta+'</span>':'')+'</div>';
+      return '<p class="doc-p'+(b.muted?' muted':'')+'">'+esc(b.text)+'</p>';
+    }).join('')+'<div class="doc-foot">GERADO POR ATA VIVA · '+
+    new Date(doc.generatedAt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' · ANÁLISE LOCAL</div>';
+    $('#dcBar').innerHTML='<button class="btn ghost small2" id="dcEdit"><i data-lucide="pencil"></i>Editar</button>'+
+      '<button class="btn ghost" id="dcShare"><i data-lucide="share-2"></i>Compartilhar</button>'+
+      '<button class="btn solid" id="dcExport"><i data-lucide="download"></i>Exportar</button>';
+  }
+  refreshIcons();
+  if(state.editing) bindEditBar(); else bindDocBar();
+}
+function bindEditBar(){
+  $('#dcCancel').addEventListener('click',()=>{ state.editing=false; renderDoc(); });
+  $('#dcSave').addEventListener('click',()=>{
+    const m=getMeeting(state.currentMid);
+    m.docs[state.docType].blocks=parseDoc($('#docEditor').value);
+    save(); state.editing=false; renderDoc(); toast('Documento atualizado');
+  });
+}
+function bindDocBar(){
+  $('#dcEdit').addEventListener('click',()=>{ state.editing=true; renderDoc(); });
+  $('#dcShare').addEventListener('click',openShareSheet);
+  $('#dcExport').addEventListener('click',openExportSheet);
+  $('#dcTitle').addEventListener('blur',()=>{
+    const m=getMeeting(state.currentMid), t=$('#dcTitle').textContent.trim();
+    if(t && t!==m.title){ m.title=t; save(); toast('Título atualizado'); }
+  });
+}
+ $('#dcBack').addEventListener('click',()=>{ state.editing=false; renderFormats(); go('formats'); });
+
+function openShareSheet(){
+  const m=getMeeting(state.currentMid), text=docPlainText(m,state.docType,m.docs[state.docType]);
+  openSheet('<h3 class="sheet-title">Compartilhar</h3>'+
+    '<p class="sheet-sub">“'+esc(DOC_LABELS[state.docType].label)+'” — '+esc(m.title)+'</p>'+
+    '<div class="sheet-actions">'+
+    '<button class="sheet-opt" id="shWa"><span class="ic"><i data-lucide="message-circle"></i></span>'+
+    '<span><span class="t">WhatsApp</span><br><span class="d">Enviar o texto do documento</span></span></button>'+
+    '<button class="sheet-opt" id="shMail"><span class="ic"><i data-lucide="mail"></i></span>'+
+    '<span><span class="t">E-mail</span><br><span class="d">Abrir no seu aplicativo de e-mail</span></span></button>'+
+    '<button class="sheet-opt" id="shCopy"><span class="ic"><i data-lucide="copy"></i></span>'+
+    '<span><span class="t">Copiar texto</span><br><span class="d">Para a área de transferência</span></span></button></div>');
+  $('#shWa').addEventListener('click',()=>{
+    window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank'); closeSheet(); });
+  $('#shMail').addEventListener('click',()=>{
+    const body=text.length>1800? text.slice(0,1800)+'\n\n[… conteúdo truncado — exporte o PDF para o texto completo]' : text;
+    location.href='mailto:?subject='+encodeURIComponent(DOC_LABELS[state.docType].label+' — '+m.title)+
+      '&body='+encodeURIComponent(body); closeSheet(); });
+  $('#shCopy').addEventListener('click',async()=>{
+    try{ await navigator.clipboard.writeText(text); }
+    catch(e){ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove(); }
+    closeSheet(); toast('Texto copiado');
+  });
+}
+function openExportSheet(){
+  const m=getMeeting(state.currentMid);
+  openSheet('<h3 class="sheet-title">Exportar</h3>'+
+    '<p class="sheet-sub">“'+esc(DOC_LABELS[state.docType].label)+'” — '+esc(m.title)+'</p>'+
+    '<div class="sheet-actions">'+
+    '<button class="sheet-opt" id="exPdf"><span class="ic"><i data-lucide="file-text"></i></span>'+
+    '<span><span class="t">PDF</span><br><span class="d">Documento paginado, pronto para imprimir</span></span></button>'+
+    '<button class="sheet-opt" id="exDoc"><span class="ic"><i data-lucide="file"></i></span>'+
+    '<span><span class="t">Word (.doc)</span><br><span class="d">Editável no Word e no Google Docs</span></span></button>'+
+    '<button class="sheet-opt" id="exAudio" '+(audioChunks.length?'':'style="opacity:.45"')+'>'+
+    '<span class="ic"><i data-lucide="mic"></i></span>'+
+    '<span><span class="t">Áudio da gravação (.webm)</span><br><span class="d">'+
+    (audioChunks.length?'Arquivo original capturado pelo microfone':'Disponível apenas para gravações com microfone')+'</span></span></button></div>');
+  $('#exPdf').addEventListener('click',()=>{ exportPDF(); closeSheet(); });
+  $('#exDoc').addEventListener('click',()=>{ exportWord(); closeSheet(); });
+  $('#exAudio').addEventListener('click',()=>{ if(audioChunks.length){ downloadAudio(); closeSheet(); } });
+}
+function exportPDF(){
+  const m=getMeeting(state.currentMid), doc=m.docs[state.docType];
+  const {jsPDF}=window.jspdf, pdf=new jsPDF({unit:'mm',format:'a4'});
+  const M=18, W=210-M*2; let y=24;
+  pdf.setFont('times','normal'); pdf.setFontSize(8); pdf.setTextColor(120);
+  pdf.text('ATA VIVA',M,14); pdf.text(new Date().toLocaleDateString('pt-BR'),210-M,14,{align:'right'});
+  const ensure=h=>{ if(y+h>282){ pdf.addPage(); y=22; } };
+  ensure(14); pdf.setFont('times','bold'); pdf.setFontSize(16); pdf.setTextColor(20);
+  pdf.splitTextToSize(m.title,W).forEach(l=>{ pdf.text(l,M,y); y+=7; });
+  y+=2; pdf.setFont('times','normal'); pdf.setFontSize(9.5); pdf.setTextColor(90);
+  pdf.text(longDate(m.dateISO)+'  ·  '+fmtDur(m.duration)+' de gravação',M,y); y+=7;
+  pdf.setDrawColor(200); pdf.line(M,y,210-M,y); y+=8;
+  doc.blocks.forEach(b=>{
+    if(b.type==='h'){ ensure(12); y+=3; pdf.setFont('times','bold'); pdf.setFontSize(10.5); pdf.setTextColor(170,50,30);
+      pdf.text(b.text.toUpperCase(),M,y); y+=7; }
+    else if(b.type==='li'){ pdf.setFont('times','normal'); pdf.setFontSize(10.5); pdf.setTextColor(30);
+      const full=(b.who? b.who+': ':'')+b.text+(b.meta?'  ('+b.meta+')':'');
+      const lines=pdf.splitTextToSize(full,W-6);
+      ensure(lines.length*5.4); pdf.text('–',M,y+3); pdf.text(lines,M+5,y+3); y+=lines.length*5.4+2.6; }
+    else{ pdf.setFont('times','normal'); pdf.setFontSize(10.5); pdf.setTextColor(b.muted?110:30);
+      const lines=pdf.splitTextToSize(b.text,W); ensure(lines.length*5.4+3);
+      pdf.text(lines,M,y+3); y+=lines.length*5.4+4; }
+  });
+  const total=pdf.getNumberOfPages();
+  for(let i=1;i<=total;i++){ pdf.setPage(i); pdf.setFontSize(8); pdf.setTextColor(150);
+    pdf.text('Ata Viva  ·  página '+i+' de '+total,105,292,{align:'center'}); }
+  pdf.save('AtaViva-'+slug(m.title)+'.pdf');
+  toast('PDF exportado');
+}
+function exportWord(){
+  const m=getMeeting(state.currentMid), doc=m.docs[state.docType];
+  const body=doc.blocks.map(b=>{
+    if(b.type==='h') return '<h2 style="font-size:12pt;color:#AA321E;letter-spacing:2px;margin:18pt 0 6pt;border-top:1px solid #ddd;padding-top:10pt">'+esc(b.text.toUpperCase())+'</h2>';
+    if(b.type==='li') return '<p style="margin:4pt 0 4pt 14pt;font-size:11.5pt;line-height:1.5">– '+
+      (b.who?'<b>'+esc(b.who)+':</b> ':'')+esc(b.text)+
+      (b.meta?' <span style="color:#888">('+b.meta+')</span>':'')+'</p>';
+    return '<p style="font-size:11.5pt;line-height:1.6;color:'+(b.muted?'#666':'#111')+'">'+esc(b.text)+'</p>';
+  }).join('');
+  const html='\ufeff<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">'+
+    '<head><meta charset="UTF-8"></head><body style="font-family:Georgia,serif;margin:48px">'+
+    '<p style="font-size:9pt;color:#888;letter-spacing:3px">ATA VIVA</p>'+
+    '<h1 style="font-size:20pt;margin:4pt 0">'+esc(m.title)+'</h1>'+
+    '<p style="font-size:10pt;color:#666">'+esc(longDate(m.dateISO))+' · '+esc(fmtDur(m.duration))+' de gravação</p><hr>'+
+    body+'<p style="font-size:8pt;color:#999;margin-top:24pt">Gerado por Ata Viva · análise local</p></body></html>';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'application/msword'}));
+  a.download='AtaViva-'+slug(m.title)+'.doc'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast('Word exportado');
+}
+function downloadAudio(){
+  const m=getMeeting(state.currentMid);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(audioChunks,{type:mediaRecorder?mediaRecorder.mimeType:'audio/webm'}));
+  a.download='AtaViva-'+slug(m.title)+'.webm'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast('Áudio baixado');
+}
+
+/* ============================== gravação ============================== */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let stream=null,mediaRecorder=null,audioChunks=[],analyser=null,audioCtx=null,waveRAF=null;
+let recognition=null,timerInt=null,demoInt=null,startedAt=0,pausedAt=0,pausedTotal=0;
+let demoScript=[],demoIdx=0,liveFeat=[];
+
+function openRecord(){
+  state.recording=true; state.paused=false; state.demo=false;
+  state.segments=[]; pausedTotal=0; demoIdx=0; liveFeat=[];
+  $('#txList').innerHTML=''; $('#interim').textContent='';
+  $('#recLabel').textContent='GRAVANDO'; $('#recDot').classList.remove('paused');
+  $('#recMode').textContent='AO VIVO'; $('#recMode').classList.add('red');
+  $('#srBanner').style.display='none';
+  $('#pauseTxt').textContent='Pausar'; $('#wave').classList.remove('paused');
+  setPauseIcon('pause');
+  $('#attChips').innerHTML=(state.attendeeNames||[]).map(n=>
+    '<span class="att-chip" data-n="'+esc(n)+'">'+esc(n.split(' ')[0])+'</span>').join('');
+  go('record');
+  startedAt=Date.now();
+  timerInt=setInterval(()=>{ $('#timer').textContent=fmtTimer(elapsed()); },250);
+  drawWaveLoop();
+}
+function elapsed(){ return state.paused? (pausedAt-startedAt-pausedTotal)/1000 : (Date.now()-startedAt-pausedTotal)/1000; }
+function setPauseIcon(name){
+  $('#btnPause').innerHTML='<i data-lucide="'+name+'"></i><span id="pauseTxt">'+(name==='play'?'Retomar':'Pausar')+'</span>';
+  refreshIcons();
+}
+async function startRecording(){
+  openRecord();
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=audioCtx.createMediaStreamSource(stream);
+    analyser=audioCtx.createAnalyser(); analyser.fftSize=2048; src.connect(analyser);
+    audioChunks=[];
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=e=>{ if(e.data.size) audioChunks.push(e.data); };
+    mediaRecorder.start(1000);
+    if(SR) startSR(); else $('#srBanner').style.display='flex';
+  }catch(e){
+    state.demo=true; $('#recMode').textContent='DEMONSTRAÇÃO'; $('#recMode').classList.remove('red');
+    toast('Microfone indisponível — reunião de demonstração');
+    startDemo();
+  }
+}
+function startDemo(){
+  state.demo=true; demoIdx=0; demoScript=SEED_1.map(([t,text])=>({t,text}));
+  $('#recMode').textContent='DEMONSTRAÇÃO'; $('#recMode').classList.remove('red');
+  $('#srBanner').style.display='none';
+  demoInt=setInterval(()=>{
+    if(state.paused) return;
+    const e=elapsed();
+    while(demoIdx<demoScript.length && e>=demoScript[demoIdx].t){
+      const raw=demoScript[demoIdx];
+      let spk=null;
+      const hit=people.find(p=>raw.text.includes(p.name.split(' ')[0]));
+      if(hit) spk=hit.name;
+      else if(state.attendeePeople.length) spk=state.attendeePeople[demoIdx%state.attendeePeople.length].name;
+      pushSegment({t:raw.t,text:raw.text,spk});
+      if(spk) flashSpeaker(spk);
+      demoIdx++;
+    }
+  },400);
+}
+function startSR(){
+  recognition=new SR(); recognition.lang='pt-BR'; recognition.continuous=true; recognition.interimResults=true;
+  recognition.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const r=e.results[i];
+      if(r.isFinal){
+        const txt=r[0].transcript.trim();
+        const spk=matchSpeaker(windowProfile());
+        pushSegment({t:elapsed(),text:txt,spk});
+        if(spk) flashSpeaker(spk);
+      }
+      else interim+=r[0].transcript;
+    }
+    $('#interim').textContent=interim;
+  };
+  recognition.onerror=()=>{};
+  recognition.onend=()=>{ if(state.recording&&!state.paused){ try{ recognition.start(); }catch(e){} } };
+  try{ recognition.start(); }catch(e){}
+}
+/* ---- perfil vocal da janela recente + pareamento com participantes ---- */
+function windowProfile(){
+  const f=liveFeat;
+  if(f.length<6) return null;
+  const f0s=f.map(x=>x.f0).sort((a,b)=>a-b), cs=f.map(x=>x.cent).sort((a,b)=>a-b);
+  return {f0:f0s[f0s.length>>1],cent:cs[cs.length>>1]};
+}
+function matchSpeaker(prof){
+  if(!prof) return null;
+  let best=null,bd=1e9;
+  (state.attendeePeople||[]).forEach(p=>{
+    if(!p.profile) return;
+    const d=Math.abs(Math.log2(prof.f0/p.profile.f0))+0.6*Math.abs(prof.cent-p.profile.cent)/1600;
+    if(d<bd){ bd=d; best=p; }
+  });
+  return (best&&bd<=0.38)? best.name : null;
+}
+function flashSpeaker(name){
+  const chip=document.querySelector('.att-chip[data-n="'+CSS.escape(name)+'"]');
+  if(!chip) return;
+  chip.classList.add('talking');
+  clearTimeout(chip._t);
+  chip._t=setTimeout(()=>chip.classList.remove('talking'),2200);
+}
+function pushSegment(seg){
+  if(!seg.text) return;
+  state.segments.push(seg);
+  const div=document.createElement('div');
+  div.className='tx-item';
+  div.innerHTML='<span class="t">'+fmtClock(seg.t)+'</span><span class="x">'+
+    (seg.spk?'<b class="spk">'+esc(seg.spk)+':</b> ':'')+esc(seg.text)+'</span>';
+  $('#txList').appendChild(div);
+  const list=$('#txList'); list.scrollTop=list.scrollHeight;
+  $('#interim').textContent='';
+}
+function drawWaveLoop(){
+  const cv=$('#wave'),dpr=window.devicePixelRatio||1;
+  const resize=()=>{ cv.width=cv.clientWidth*dpr; cv.height=cv.clientHeight*dpr; };
+  resize(); if(window.ResizeObserver) new ResizeObserver(resize).observe(cv.parentElement);
+  let fd=null,td=null,waveFrame=0;
+  const loop=()=>{
+    waveRAF=requestAnimationFrame(loop);
+    if(state.paused) return;
+    const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+    const bars=44,gap=cv.width/bars;
+    for(let i=0;i<bars;i++){
+      let v;
+      if(analyser){
+        if(!fd||fd.length!==analyser.frequencyBinCount) fd=new Uint8Array(analyser.frequencyBinCount);
+        if(i===0){
+          analyser.getByteFrequencyData(fd);
+          waveFrame++;
+          if(waveFrame%3===0 && audioCtx){
+            if(!td) td=new Float32Array(analyser.fftSize);
+            analyser.getFloatTimeDomainData(td);
+            const f0=estimatePitch(td,audioCtx.sampleRate);
+            if(f0){
+              liveFeat.push({f0,cent:spectralCentroid(fd,audioCtx.sampleRate),t:elapsed()});
+              const cut=elapsed()-4;
+              while(liveFeat.length&&liveFeat[0].t<cut) liveFeat.shift();
+            }
+          }
+        }
+        v=fd[Math.floor((i+.5)/bars*fd.length*.55)]/255;
+      }
+      else v=Math.abs(Math.sin(i*.9+Date.now()/300))*.5+Math.random()*.25;
+      const h=Math.max(3*dpr,v*cv.height*.86), x=i*gap+gap*.22, w=gap*.56;
+      ctx.fillStyle=v>.62?'#D6452C':'#191713';
+      if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(x,(cv.height-h)/2,w,h,w/2); ctx.fill(); }
+      else ctx.fillRect(x,(cv.height-h)/2,w,h);
+    }
+  };
+  loop();
+}
+ $('#btnPause').addEventListener('click',()=>{
+  if(!state.recording) return;
+  state.paused=!state.paused;
+  $('#recDot').classList.toggle('paused',state.paused);
+  $('#wave').classList.toggle('paused',state.paused);
+  $('#recLabel').textContent=state.paused?'PAUSADO':'GRAVANDO';
+  if(state.paused){ pausedAt=Date.now(); if(recognition)try{recognition.stop();}catch(e){}
+    if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.pause(); }
+  else{ pausedTotal+=Date.now()-pausedAt; if(recognition)try{recognition.start();}catch(e){}
+    if(mediaRecorder&&mediaRecorder.state==='paused')mediaRecorder.resume(); }
+  setPauseIcon(state.paused?'play':'pause');
+});
+ $('#btnFinalize').addEventListener('click',finalize);
+function finalize(){
+  if(state.segments.length===0){
+    openSheet('<h3 class="sheet-title">Nada foi transcrito</h3>'+
+      '<p class="sheet-sub">Não capturamos nenhuma fala nesta gravação. Você pode simular uma transcrição de demonstração ou descartar a reunião.</p>'+
+      '<button class="btn red" id="optSim"><i data-lucide="sparkles"></i>Simular transcrição de demonstração</button>'+
+      '<button class="btn ghost" id="optDrop" style="width:100%;margin-top:10px">Descartar reunião</button>');
+    $('#optSim').addEventListener('click',()=>{ closeSheet();
+      if(pausedAt){ pausedTotal+=Date.now()-pausedAt; pausedAt=0; }
+      state.paused=false; setPauseIcon('pause'); startDemo(); });
+    $('#optDrop').addEventListener('click',()=>{ closeSheet(); discard(); });
+    return;
+  }
+  stopAll();
+  const m={ id:uid(), title:autoTitle(), dateISO:new Date().toISOString(),
+    duration:Math.round(elapsed()), segments:state.segments.slice(),
+    attendees:state.attendeeNames.slice(), docs:{}, demo:state.demo };
+  meetings.unshift(m); save();
+  showProcessing(()=>openFormats(m.id,'home'));
+}
+function autoTitle(){
+  const first=state.segments[0]?state.segments[0].text:'';
+  const m=first.match(/reuni(?:ã|a)o de ([^.,;!]+)/i);
+  if(m){ const t=m[1].trim(); return 'Reunião de '+t.charAt(0).toUpperCase()+t.slice(1); }
+  return 'Reunião — '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+}
+function discard(){
+  stopAll(); state.recording=false; clearInterval(timerInt); renderHome(); go('home');
+  toast('Reunião descartada');
+}
+function stopAll(){
+  state.recording=false; clearInterval(timerInt); clearInterval(demoInt);
+  if(recognition){ try{recognition.onend=null;recognition.stop();}catch(e){} recognition=null; }
+  if(mediaRecorder&&mediaRecorder.state!=='inactive')try{mediaRecorder.stop();}catch(e){}
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  if(audioCtx)try{audioCtx.close();}catch(e){}
+  stream=null; analyser=null; mediaRecorder=null; audioCtx=null;
+}
+ $('#btnSimulate').addEventListener('click',()=>{ $('#srBanner').style.display='none'; startDemo(); });
+
+/* processamento */
+function showProcessing(done){
+  const ov=$('#processing'); ov.classList.add('show');
+  ['pr1','pr2','pr3'].forEach(id=>$('#'+id).classList.remove('done'));
+  setTimeout(()=>$('#pr1').classList.add('done'),350);
+  setTimeout(()=>$('#pr2').classList.add('done'),1150);
+  setTimeout(()=>$('#pr3').classList.add('done'),2000);
+  setTimeout(()=>{ ov.classList.remove('show'); done(); },2700);
+}
+
+/* ============================== ligações finais ============================== */
+ $('#btnStart').addEventListener('click',openAttendance);
+ $('#teamCard').addEventListener('click',()=>{ state.confirmDelPerson=null; renderPeople(); go('people'); });
+ $('#backupCard').addEventListener('click',openBackupSheet);
+ $('#ppBack').addEventListener('click',()=>{ renderHome(); go('home'); });
+ $('#ppAdd').addEventListener('click',()=>openPerson(null,'people'));
+ $('#psBack').addEventListener('click',()=>{ cancelSample(); renderPeople(); go('people'); });
+ $('#linkHistory').addEventListener('click',()=>{ state.confirmDelete=null; renderHistory(''); go('history'); });
+ $('#hsBack').addEventListener('click',()=>{ renderHome(); go('home'); });
+ $('#hsSearch').addEventListener('input',e=>renderHistory(e.target.value));
+ $('#fmBack').addEventListener('click',()=>{
+  if(state.back==='history'){ state.confirmDelete=null; renderHistory(''); go('history'); }
+  else { renderHome(); go('home'); }
+});
+
+loadPeople(); load(); renderHome(); refreshIcons();
+requestDurableStorage();
+
+/* service worker: abre offline depois da 1ª visita */
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
+  addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+
+/* dica única na primeira visita */
+try{
+  if(!localStorage.getItem('ataviva.hint.v1')){
+    localStorage.setItem('ataviva.hint.v1','1');
+    setTimeout(()=>toast('Seus dados ficam no aparelho · proteja com Backup'),1400);
+  }
+}catch(e){}
+</script>
+</body>
+</html>
