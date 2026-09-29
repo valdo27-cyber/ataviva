@@ -1,5 +1,5 @@
 /* Ata Viva — cache offline (a transcrição por voz sempre usa internet) */
-const V = 'ataviva-v1.0';
+const V = 'ataviva-v1.1';
 
 const SHELL = [
   './', './index.html', './manifest.json', './icon.svg',
@@ -31,7 +31,6 @@ self.addEventListener('fetch', e => {
 
   e.respondWith((async () => {
     if (sameOrigin) {
-      /* app: rede primeiro (mantém atualizado), cache como reserva offline */
       try {
         const res = await fetch(req);
         if (res && res.ok) { const c = await caches.open(V); c.put(req, res.clone()); }
@@ -41,7 +40,6 @@ self.addEventListener('fetch', e => {
         return hit || await caches.match('./index.html') || Response.error();
       }
     } else {
-      /* bibliotecas e fontes: cache primeiro (offline e rápido) */
       const hit = await caches.match(req);
       if (hit) return hit;
       try {
