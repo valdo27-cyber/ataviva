@@ -22,10 +22,7 @@ html,body{height:100%}
 body{font-family:'Instrument Sans',sans-serif;background:#151310;color:var(--ink)}
 button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
 input,textarea{font-family:inherit;color:inherit}
-.mono{font-family:'IBM Plex Mono',monospace}
 svg.lucide{width:18px;height:18px;stroke-width:1.9}
-
-/* ---------- palco + moldura do celular ---------- */
 .stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
 .phone{position:relative;width:100vw;height:100dvh;background:var(--paper);overflow:hidden}
 .notch{display:none}
@@ -38,19 +35,14 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
     width:98px;height:27px;background:#0c0b0a;border-radius:999px;z-index:60;pointer-events:none}
   .caption{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;color:#6d6457}
 }
-
-/* ---------- telas ---------- */
 .app{height:100%;position:relative}
 .screen{position:absolute;inset:0;overflow-y:auto;display:none;padding:60px 22px 26px;
   overscroll-behavior:contain;scrollbar-width:thin}
 .screen.active{display:flex;flex-direction:column;animation:enter .28s ease}
 @keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(max-width:539px){.screen{padding-top:calc(env(safe-area-inset-top,0px) + 34px)}}
-
 .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase}
 .hairline{height:1px;background:var(--line);border:none}
-
-/* ---------- home ---------- */
 .wordmark{font-family:'Fraunces',serif;font-weight:600;font-size:38px;letter-spacing:-.01em;line-height:1.05}
 .wordmark .dot{color:var(--red)}
 .tagline{margin-top:8px;color:var(--ink-soft);font-size:14.5px;line-height:1.5}
@@ -89,8 +81,6 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
 .row .ch{color:var(--ink-soft);flex:none}
 .empty{padding:34px 8px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6}
 .empty svg{width:26px;height:26px;margin-bottom:10px;opacity:.6}
-
-/* ---------- gravação ---------- */
 .rec-top{display:flex;align-items:center;justify-content:space-between}
 .rec-badge{display:flex;align-items:center;gap:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--red-deep)}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite}
@@ -107,6 +97,8 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
 .timer{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:54px;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;text-align:center;margin:18px 0 6px}
 .timer-sub{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.22em;color:var(--ink-soft)}
+.paused-hint{margin:12px auto 0;max-width:320px;text-align:center;font-size:12.5px;line-height:1.5;color:var(--ink-soft);
+  border:1px dashed var(--line);border-radius:12px;padding:10px 14px;background:var(--card)}
 .wave-wrap{margin:16px 0 6px;height:62px;border:1px solid var(--line);border-radius:14px;background:var(--card);
   overflow:hidden;position:relative}
 #wave{width:100%;height:100%;display:block;transition:opacity .3s,filter .3s}
@@ -114,6 +106,8 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
 .tx-head{display:flex;align-items:center;gap:10px;margin:16px 0 4px}
 .tx-head .eyebrow{flex:none}
 .tx-head .hairline{flex:1}
+.listening{display:none;align-items:center;gap:9px;padding:8px 4px;color:var(--ink-soft);font-size:13.5px;font-style:italic}
+.listening .ldot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;flex:none}
 .tx-list{display:flex;flex-direction:column;gap:2px;max-height:30vh;overflow-y:auto;padding:4px 2px 8px;scrollbar-width:thin}
 .tx-item{display:flex;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line-soft);animation:enter .3s ease}
 .tx-item .t{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--red-deep);padding-top:3px;flex:none}
@@ -121,7 +115,7 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
 .spk{font-weight:700;color:var(--ink)}
 .tx-interim{padding:10px 4px;font-size:14.5px;font-style:italic;color:var(--ink-soft);min-height:24px}
 .sr-banner{margin:12px 0 0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
-  display:flex;gap:10px;align-items:flex-start;background:var(--card)}
+  display:none;gap:10px;align-items:flex-start;background:var(--card)}
 .sr-banner p{font-size:12.5px;line-height:1.5;color:var(--ink-soft);flex:1}
 .sr-banner button{flex:none;font-size:12px;font-weight:600;color:var(--red-deep);text-decoration:underline}
 .bar{position:sticky;bottom:0;display:flex;gap:10px;margin:10px -22px 0;
@@ -135,8 +129,6 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
 .btn.red{background:var(--red);color:#fff}
 .btn.small{height:38px;border-radius:10px;font-size:13px;padding:0 14px;flex:none}
 .bar .btn.ghost.small2{flex:.7}
-
-/* ---------- processamento ---------- */
 .processing{position:absolute;inset:0;background:var(--ink);color:var(--paper);z-index:80;display:none;
   flex-direction:column;align-items:center;justify-content:center;gap:34px;padding:40px}
 .processing.show{display:flex;animation:fadeIn .3s ease}
@@ -152,8 +144,6 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
   display:grid;place-items:center;font-size:11px}
 .pr-step.done{opacity:1}
 .pr-step.done .pr-dot{background:var(--red);border-color:var(--red);color:#fff}
-
-/* ---------- formatos ---------- */
 .screen-title{font-family:'Fraunces',serif;font-size:26px;font-weight:600;line-height:1.2;margin-top:10px}
 .screen-sub{margin-top:8px;color:var(--ink-soft);font-size:13.5px;line-height:1.55}
 .fm-item{display:flex;align-items:center;gap:14px;padding:16px 2px;border-bottom:1px solid var(--line-soft);text-align:left;transition:background .15s}
@@ -167,8 +157,6 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
 .back-row{display:flex;align-items:center;gap:6px;margin-left:-8px;padding:6px 8px 2px;align-self:flex-start;
   font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
 .back-row svg{width:15px;height:15px}
-
-/* ---------- documento ---------- */
 .paper{background:var(--doc);border:1px solid var(--line);border-radius:6px;padding:26px 22px 22px;
   box-shadow:0 14px 34px -22px rgba(25,23,19,.35);margin-top:16px}
 .dc-label{display:flex;align-items:center;gap:8px;margin-top:2px}
@@ -191,16 +179,12 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
   font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--ink-soft);text-transform:uppercase}
 .paper-edit{width:100%;min-height:46vh;background:transparent;border:none;outline:none;resize:vertical;
   font-size:13.5px;line-height:1.8;font-family:'IBM Plex Mono',monospace;padding:4px 0}
-
-/* ---------- histórico & busca ---------- */
 .search{display:flex;align-items:center;gap:10px;margin-top:16px;border:1px solid var(--line);border-radius:13px;
   background:var(--card);padding:0 14px;height:48px}
 .search svg{color:var(--ink-soft);flex:none}
 .search input{flex:1;border:none;outline:none;background:transparent;font-size:15.5px}
 .search input::placeholder{color:#A79E8F}
 .danger-row{display:flex;gap:8px;align-items:center}
-
-/* ---------- participantes ---------- */
 .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px}
 .input{width:100%;height:50px;border:1.5px solid var(--line);border-radius:13px;background:var(--doc);
@@ -222,8 +206,6 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
 .shuf{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:9px;color:var(--ink-soft);flex:none}
 .shuf svg{width:14px;height:14px}
 .mini-audio{width:100%;margin-top:12px;height:40px;border-radius:10px;outline:none}
-
-/* ---------- sheets & toast ---------- */
 .backdrop{position:absolute;inset:0;background:rgba(20,17,14,.45);z-index:90;opacity:0;pointer-events:none;transition:opacity .25s}
 .backdrop.show{opacity:1;pointer-events:auto}
 .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:22px 22px 0 0;z-index:95;
@@ -263,21 +245,17 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
     <div class="notch"></div>
     <div class="app">
 
-      <!-- ======== HOME ======== -->
       <section class="screen active" id="scr-home">
         <h1 class="wordmark">Ata Viva<span class="dot">.</span></h1>
         <p class="tagline">Suas reuniões gravadas, transcritas e transformadas em documentos prontos — sem digitar uma linha.</p>
-
         <div class="hero">
           <button class="hero-btn" id="btnStart" aria-label="Iniciar reunião"><span class="stop"></span></button>
           <div class="hero-label">Iniciar Reunião</div>
           <div class="hero-hint">TOQUE PARA COMEÇAR A GRAVAR</div>
         </div>
-
         <p class="home-stats" id="homeStats"></p>
         <button class="team" id="teamCard"></button>
         <button class="team" id="backupCard"></button>
-
         <div class="list-head">
           <span class="eyebrow">Recentes</span>
           <button class="link" id="linkHistory">Ver histórico</button>
@@ -285,7 +263,6 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         <div id="homeRecent"></div>
       </section>
 
-      <!-- ======== PARTICIPANTES ======== -->
       <section class="screen" id="scr-people">
         <button class="back-row" id="ppBack"><i data-lucide="chevron-left"></i>Início</button>
         <h2 class="screen-title">Participantes</h2>
@@ -296,7 +273,6 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         </div>
       </section>
 
-      <!-- ======== PARTICIPANTE (cadastro/edição) ======== -->
       <section class="screen" id="scr-person">
         <button class="back-row" id="psBack"><i data-lucide="chevron-left"></i>Participantes</button>
         <h2 class="screen-title" id="psTitle">Novo participante</h2>
@@ -317,7 +293,6 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         <div class="bar" id="psBar"></div>
       </section>
 
-      <!-- ======== GRAVAÇÃO ======== -->
       <section class="screen" id="scr-record">
         <div class="rec-top">
           <div class="rec-badge"><span class="dot" id="recDot"></span><span id="recLabel">GRAVANDO</span></div>
@@ -326,12 +301,14 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         <div class="att-chips" id="attChips"></div>
         <div class="timer" id="timer">00:00</div>
         <div class="timer-sub">TEMPO DE GRAVAÇÃO</div>
+        <div class="paused-hint" id="pausedHint" style="display:none">Gravação pausada — a transcrição também pausa. Toque em <b>Retomar</b> para continuar.</div>
         <div class="wave-wrap"><canvas id="wave"></canvas></div>
         <div class="sr-banner" id="srBanner" style="display:none">
-          <p>Transcrição ao vivo indisponível neste navegador (requer Chrome ou Edge). O áudio continua sendo gravado.</p>
+          <p id="srMsg">Transcrição ao vivo indisponível neste navegador. O áudio continua sendo gravado.</p>
           <button id="btnSimulate">Simular transcrição</button>
         </div>
         <div class="tx-head"><span class="eyebrow">Transcrição ao vivo</span><hr class="hairline"></div>
+        <div class="listening" id="listeningHint"><span class="ldot"></span>Ouvindo — fale perto do microfone…</div>
         <div class="tx-list" id="txList"></div>
         <div class="tx-interim" id="interim"></div>
         <div class="bar">
@@ -340,7 +317,6 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         </div>
       </section>
 
-      <!-- ======== FORMATOS ======== -->
       <section class="screen" id="scr-formats">
         <button class="back-row" id="fmBack"><i data-lucide="chevron-left"></i>Voltar</button>
         <h2 class="screen-title">Como você quer o resultado?</h2>
@@ -348,7 +324,6 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         <div id="fmList" style="margin-top:10px"></div>
       </section>
 
-      <!-- ======== DOCUMENTO ======== -->
       <section class="screen" id="scr-doc">
         <button class="back-row" id="dcBack"><i data-lucide="chevron-left"></i>Formatos</button>
         <div class="dc-label" id="dcLabel"></div>
@@ -361,7 +336,6 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         <div class="bar" id="dcBar"></div>
       </section>
 
-      <!-- ======== HISTÓRICO ======== -->
       <section class="screen" id="scr-history">
         <button class="back-row" id="hsBack"><i data-lucide="chevron-left"></i>Início</button>
         <h2 class="screen-title">Histórico</h2>
@@ -369,7 +343,6 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         <div id="hsList"></div>
       </section>
 
-      <!-- overlays -->
       <div class="processing" id="processing">
         <div class="eq"><span></span><span></span><span></span><span></span></div>
         <div class="pr-steps">
@@ -945,7 +918,6 @@ function spectralCentroid(fd,sr){
   for(let i=1;i<fd.length;i++){ num+=i*binHz*fd[i]; den+=fd[i]; }
   return den>0? num/den : 0;
 }
-/* FFT iterativa — usada na análise de arquivos de áudio enviados */
 function fftInPlace(re,im){
   const n=re.length;
   for(let i=1,j=0;i<n;i++){
@@ -1030,8 +1002,6 @@ function cancelSample(){
   try{ sampleState.ctx.close(); }catch(e){}
   sampleState=null;
 }
-
-/* ---- análise de arquivo de áudio enviado (mesma métrica do ao vivo) ---- */
 async function analyzeVoiceFile(file){
   if(state.analyzingFile) return;
   cancelSample();
@@ -1047,17 +1017,17 @@ async function analyzeVoiceFile(file){
     finally{ try{ tmp.close(); }catch(e){} }
     const sr=buf.sampleRate, ch=buf.getChannelData(0);
     const N=2048, feats=[];
-    const limit=Math.min(ch.length, sr*180); /* analisa até 3 minutos */
+    const limit=Math.min(ch.length, sr*180);
     let fi=0;
     for(let off=0; off+N<=limit && feats.length<400; off+=N){
       const frame=ch.subarray(off,off+N);
       let rms=0; for(let i=0;i<N;i+=4) rms+=frame[i]*frame[i];
       rms=Math.sqrt(rms/(N/4));
-      if(rms<0.015) continue;               /* pula silêncio */
+      if(rms<0.015) continue;
       const f0=estimatePitch(frame,sr);
-      if(!f0) continue;                     /* pula ruído sem tom */
+      if(!f0) continue;
       feats.push({f0,cent:frameCentroid(frame,sr)});
-      if(++fi%50===0) await new Promise(r=>setTimeout(r,0)); /* mantém a UI viva */
+      if(++fi%50===0) await new Promise(r=>setTimeout(r,0));
     }
     state.analyzingFile=false;
     if(feats.length<15){
@@ -1347,6 +1317,39 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let stream=null,mediaRecorder=null,audioChunks=[],analyser=null,audioCtx=null,waveRAF=null;
 let recognition=null,timerInt=null,demoInt=null,startedAt=0,pausedAt=0,pausedTotal=0;
 let demoScript=[],demoIdx=0,liveFeat=[];
+/* diagnóstico da transcrição (v1.2) */
+let watchdogInt=null, srGotAny=false, srDisabled=false;
+
+function updateHints(){
+  const listening=state.recording&&!state.paused&&state.segments.length===0;
+  $('#listeningHint').style.display=listening?'flex':'none';
+  $('#pausedHint').style.display=(state.recording&&state.paused)?'block':'none';
+}
+function showSrBanner(msg){
+  const b=$('#srBanner');
+  b.innerHTML='<p>'+esc(msg)+'</p><button id="btnSimulate">Simular transcrição</button>';
+  b.style.display='flex';
+  $('#btnSimulate').addEventListener('click',()=>{
+    srDisabled=true;
+    if(recognition){ try{recognition.onend=null;recognition.stop();}catch(e){} recognition=null; }
+    $('#srBanner').style.display='none';
+    if(state.paused) applyPause(false);
+    startDemo();
+  });
+  refreshIcons();
+}
+function startWatchdog(){
+  srGotAny=false; srDisabled=false;
+  if(watchdogInt) clearInterval(watchdogInt);
+  watchdogInt=setInterval(()=>{
+    if(!state.recording){ clearInterval(watchdogInt); return; }
+    if(state.paused||state.demo) return;
+    if(srGotAny){ clearInterval(watchdogInt); return; }
+    if(elapsed()>=12 && $('#srBanner').style.display!=='flex'){
+      showSrBanner('A transcrição não recebeu nenhuma fala até agora. Se você está falando perto do celular, seu navegador pode não oferecer o serviço de transcrição. O áudio continua sendo gravado — e você pode simular uma transcrição para testar o resto do fluxo.');
+    }
+  },3000);
+}
 
 function openRecord(){
   state.recording=true; state.paused=false; state.demo=false;
@@ -1362,6 +1365,8 @@ function openRecord(){
   go('record');
   startedAt=Date.now();
   timerInt=setInterval(()=>{ $('#timer').textContent=fmtTimer(elapsed()); },250);
+  startWatchdog();
+  updateHints();
   drawWaveLoop();
 }
 function elapsed(){ return state.paused? (pausedAt-startedAt-pausedTotal)/1000 : (Date.now()-startedAt-pausedTotal)/1000; }
@@ -1380,7 +1385,8 @@ async function startRecording(){
     mediaRecorder=new MediaRecorder(stream);
     mediaRecorder.ondataavailable=e=>{ if(e.data.size) audioChunks.push(e.data); };
     mediaRecorder.start(1000);
-    if(SR) startSR(); else $('#srBanner').style.display='flex';
+    if(SR) startSR();
+    else showSrBanner('Transcrição ao vivo indisponível neste navegador (requer Chrome ou Edge). O áudio continua sendo gravado — você pode simular uma transcrição para testar o fluxo.');
   }catch(e){
     state.demo=true; $('#recMode').textContent='DEMONSTRAÇÃO'; $('#recMode').classList.remove('red');
     toast('Microfone indisponível — reunião de demonstração');
@@ -1391,6 +1397,7 @@ function startDemo(){
   state.demo=true; demoIdx=0; demoScript=SEED_1.map(([t,text])=>({t,text}));
   $('#recMode').textContent='DEMONSTRAÇÃO'; $('#recMode').classList.remove('red');
   $('#srBanner').style.display='none';
+  updateHints();
   demoInt=setInterval(()=>{
     if(state.paused) return;
     const e=elapsed();
@@ -1409,6 +1416,8 @@ function startDemo(){
 function startSR(){
   recognition=new SR(); recognition.lang='pt-BR'; recognition.continuous=true; recognition.interimResults=true;
   recognition.onresult=e=>{
+    srGotAny=true;
+    if($('#srBanner').style.display==='flex') $('#srBanner').style.display='none';
     let interim='';
     for(let i=e.resultIndex;i<e.results.length;i++){
       const r=e.results[i];
@@ -1422,8 +1431,20 @@ function startSR(){
     }
     $('#interim').textContent=interim;
   };
-  recognition.onerror=()=>{};
-  recognition.onend=()=>{ if(state.recording&&!state.paused){ try{ recognition.start(); }catch(e){} } };
+  recognition.onerror=e=>{
+    if(state.demo||srDisabled) return;
+    const r=e&&e.error;
+    if(r==='no-speech'||r==='aborted') return;
+    const msgs={
+      'not-allowed':'O serviço de transcrição foi impedido de usar o microfone. Verifique as permissões do site (cadeado ao lado do endereço) e do navegador.',
+      'service-not-allowed':'Este navegador bloqueou o serviço de transcrição de voz — é comum no Brave e em navegadores focados em privacidade. Tente pelo Google Chrome.',
+      'network':'Sem conexão com o serviço de transcrição. Verifique se a internet está funcionando.',
+      'audio-capture':'O microfone não está disponível para a transcrição.',
+      'language-not-supported':'Este navegador não suporta transcrição em português.'
+    };
+    showSrBanner(msgs[r]||('A transcrição apresentou um problema ('+r+') e foi interrompida. O áudio continua sendo gravado — você pode simular uma transcrição para testar o fluxo.'));
+  };
+  recognition.onend=()=>{ if(state.recording&&!state.paused&&!srDisabled){ try{ recognition.start(); }catch(e){} } };
   try{ recognition.start(); }catch(e){}
 }
 /* ---- perfil vocal da janela recente + pareamento com participantes ---- */
@@ -1460,6 +1481,7 @@ function pushSegment(seg){
   $('#txList').appendChild(div);
   const list=$('#txList'); list.scrollTop=list.scrollHeight;
   $('#interim').textContent='';
+  updateHints();
 }
 function drawWaveLoop(){
   const cv=$('#wave'),dpr=window.devicePixelRatio||1;
@@ -1500,28 +1522,34 @@ function drawWaveLoop(){
   };
   loop();
 }
+function applyPause(p){
+  state.paused=p;
+  $('#recDot').classList.toggle('paused',p);
+  $('#wave').classList.toggle('paused',p);
+  $('#recLabel').textContent=p?'PAUSADO':'GRAVANDO';
+  if(p){ pausedAt=Date.now(); if(recognition)try{recognition.stop();}catch(e){}
+    if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.pause(); }
+  else{ if(pausedAt){ pausedTotal+=Date.now()-pausedAt; pausedAt=0; }
+    if(recognition&&!srDisabled)try{recognition.start();}catch(e){}
+    if(mediaRecorder&&mediaRecorder.state==='paused')mediaRecorder.resume(); }
+  setPauseIcon(p?'play':'pause');
+  updateHints();
+}
  $('#btnPause').addEventListener('click',()=>{
   if(!state.recording) return;
-  state.paused=!state.paused;
-  $('#recDot').classList.toggle('paused',state.paused);
-  $('#wave').classList.toggle('paused',state.paused);
-  $('#recLabel').textContent=state.paused?'PAUSADO':'GRAVANDO';
-  if(state.paused){ pausedAt=Date.now(); if(recognition)try{recognition.stop();}catch(e){}
-    if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.pause(); }
-  else{ pausedTotal+=Date.now()-pausedAt; if(recognition)try{recognition.start();}catch(e){}
-    if(mediaRecorder&&mediaRecorder.state==='paused')mediaRecorder.resume(); }
-  setPauseIcon(state.paused?'play':'pause');
+  applyPause(!state.paused);
 });
  $('#btnFinalize').addEventListener('click',finalize);
 function finalize(){
   if(state.segments.length===0){
     openSheet('<h3 class="sheet-title">Nada foi transcrito</h3>'+
-      '<p class="sheet-sub">Não capturamos nenhuma fala nesta gravação. Você pode simular uma transcrição de demonstração ou descartar a reunião.</p>'+
-      '<button class="btn red" id="optSim"><i data-lucide="sparkles"></i>Simular transcrição de demonstração</button>'+
-      '<button class="btn ghost" id="optDrop" style="width:100%;margin-top:10px">Descartar reunião</button>');
-    $('#optSim').addEventListener('click',()=>{ closeSheet();
-      if(pausedAt){ pausedTotal+=Date.now()-pausedAt; pausedAt=0; }
-      state.paused=false; setPauseIcon('pause'); startDemo(); });
+      '<p class="sheet-sub">Não capturamos nenhuma fala nesta gravação'+(state.paused?' — e o status estava <b>PAUSADO</b>, o que também suspende a transcrição':'')+
+      '. Você pode continuar gravando, simular uma transcrição de demonstração ou descartar a reunião.</p>'+
+      '<button class="btn ghost" id="optResume" style="width:100%"><i data-lucide="mic"></i>Continuar gravando</button>'+
+      '<button class="btn red" id="optSim" style="width:100%;margin-top:10px"><i data-lucide="sparkles"></i>Simular transcrição de demonstração</button>'+
+      '<button class="sheet-opt" id="optDrop" style="justify-content:center;margin-top:4px"><span class="t" style="font-weight:500;font-size:13px;color:var(--ink-soft)">Descartar reunião</span></button>');
+    $('#optResume').addEventListener('click',()=>{ closeSheet(); if(state.paused) applyPause(false); });
+    $('#optSim').addEventListener('click',()=>{ closeSheet(); if(state.paused) applyPause(false); startDemo(); });
     $('#optDrop').addEventListener('click',()=>{ closeSheet(); discard(); });
     return;
   }
@@ -1539,18 +1567,19 @@ function autoTitle(){
   return 'Reunião — '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
 }
 function discard(){
-  stopAll(); state.recording=false; clearInterval(timerInt); renderHome(); go('home');
+  stopAll(); state.recording=false; renderHome(); go('home');
   toast('Reunião descartada');
 }
 function stopAll(){
-  state.recording=false; clearInterval(timerInt); clearInterval(demoInt);
+  state.recording=false; clearInterval(timerInt); clearInterval(demoInt); clearInterval(watchdogInt);
   if(recognition){ try{recognition.onend=null;recognition.stop();}catch(e){} recognition=null; }
   if(mediaRecorder&&mediaRecorder.state!=='inactive')try{mediaRecorder.stop();}catch(e){}
   if(stream)stream.getTracks().forEach(t=>t.stop());
   if(audioCtx)try{audioCtx.close();}catch(e){}
   stream=null; analyser=null; mediaRecorder=null; audioCtx=null;
+  $('#listeningHint').style.display='none';
+  $('#pausedHint').style.display='none';
 }
- $('#btnSimulate').addEventListener('click',()=>{ $('#srBanner').style.display='none'; startDemo(); });
 
 /* processamento */
 function showProcessing(done){
@@ -1580,12 +1609,10 @@ function showProcessing(done){
 loadPeople(); load(); renderHome(); refreshIcons();
 requestDurableStorage();
 
-/* service worker: abre offline depois da 1ª visita */
 if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
   addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
 
-/* dica única na primeira visita */
 try{
   if(!localStorage.getItem('ataviva.hint.v1')){
     localStorage.setItem('ataviva.hint.v1','1');
