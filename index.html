@@ -117,7 +117,8 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
 .sr-banner{margin:12px 0 0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
   display:none;gap:10px;align-items:flex-start;background:var(--card)}
 .sr-banner p{font-size:12.5px;line-height:1.5;color:var(--ink-soft);flex:1}
-.sr-banner button{flex:none;font-size:12px;font-weight:600;color:var(--red-deep);text-decoration:underline}
+.sr-acts{display:flex;flex-direction:column;gap:7px;flex:none;align-items:flex-end}
+.sr-acts button{font-size:12px;font-weight:600;color:var(--red-deep);text-decoration:underline}
 .bar{position:sticky;bottom:0;display:flex;gap:10px;margin:10px -22px 0;
   padding:14px 22px calc(14px + env(safe-area-inset-bottom,0px));
   background:linear-gradient(to top,var(--paper) 72%,rgba(244,241,234,0));z-index:20}
@@ -144,8 +145,18 @@ svg.lucide{width:18px;height:18px;stroke-width:1.9}
   display:grid;place-items:center;font-size:11px}
 .pr-step.done{opacity:1}
 .pr-step.done .pr-dot{background:var(--red);border-color:var(--red);color:#fff}
+.asr-title{font-family:'Fraunces',serif;font-size:23px;font-weight:600}
+.asr-line{position:relative;width:220px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);overflow:hidden}
+.asr-fill{position:absolute;top:0;left:0;height:100%;width:0;border-radius:2px;background:var(--red);transition:width .3s}
+.asr-line.indet .asr-fill{width:40%;animation:indet 1.2s linear infinite}
+@keyframes indet{0%{left:-40%}100%{left:100%}}
+.asr-status{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:#B8AFA2;text-transform:uppercase}
+.asr-note{font-size:12px;line-height:1.6;color:#9A9184;max-width:270px;text-align:center}
 .screen-title{font-family:'Fraunces',serif;font-size:26px;font-weight:600;line-height:1.2;margin-top:10px}
 .screen-sub{margin-top:8px;color:var(--ink-soft);font-size:13.5px;line-height:1.55}
+.asr-panel{display:none;border:1px dashed var(--line);background:var(--card);border-radius:14px;padding:16px;margin-top:14px}
+.asr-panel .ap-t{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
+.asr-panel p{font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin:6px 0 12px}
 .fm-item{display:flex;align-items:center;gap:14px;padding:16px 2px;border-bottom:1px solid var(--line-soft);text-align:left;transition:background .15s}
 .fm-item:active{background:rgba(0,0,0,.03)}
 .fm-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);width:22px;flex:none}
@@ -303,10 +314,7 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         <div class="timer-sub">TEMPO DE GRAVAÇÃO</div>
         <div class="paused-hint" id="pausedHint" style="display:none">Gravação pausada — a transcrição também pausa. Toque em <b>Retomar</b> para continuar.</div>
         <div class="wave-wrap"><canvas id="wave"></canvas></div>
-        <div class="sr-banner" id="srBanner" style="display:none">
-          <p id="srMsg">Transcrição ao vivo indisponível neste navegador. O áudio continua sendo gravado.</p>
-          <button id="btnSimulate">Simular transcrição</button>
-        </div>
+        <div class="sr-banner" id="srBanner" style="display:none"></div>
         <div class="tx-head"><span class="eyebrow">Transcrição ao vivo</span><hr class="hairline"></div>
         <div class="listening" id="listeningHint"><span class="ldot"></span>Ouvindo — fale perto do microfone…</div>
         <div class="tx-list" id="txList"></div>
@@ -321,6 +329,7 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
         <button class="back-row" id="fmBack"><i data-lucide="chevron-left"></i>Voltar</button>
         <h2 class="screen-title">Como você quer o resultado?</h2>
         <p class="screen-sub" id="fmMeta"></p>
+        <div class="asr-panel" id="asrPanel"></div>
         <div id="fmList" style="margin-top:10px"></div>
       </section>
 
@@ -350,6 +359,14 @@ mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
           <div class="pr-step" id="pr2"><span class="pr-dot"><i data-lucide="check"></i></span>Transcrição concluída</div>
           <div class="pr-step" id="pr3"><span class="pr-dot"><i data-lucide="check"></i></span>Análise inteligente do conteúdo</div>
         </div>
+      </div>
+
+      <div class="processing" id="asrOv" style="z-index:86;gap:22px">
+        <div class="eq"><span></span><span></span><span></span><span></span></div>
+        <div class="asr-title">Transcrição local</div>
+        <div class="asr-line" id="asrLine"><div class="asr-fill" id="asrFill"></div></div>
+        <div class="asr-status" id="asrTxt">PREPARANDO…</div>
+        <p class="asr-note">O modelo de IA roda no seu aparelho. A primeira vez baixa ≈41 MB (fica salvo). Em reuniões longas pode levar alguns minutos — mantenha o app aberto.</p>
       </div>
 
       <div class="backdrop" id="backdrop"></div>
@@ -389,6 +406,27 @@ function openSheet(html){ $('#sheet').innerHTML='<div class="grab"></div>'+html;
   $('#sheet').classList.add('open'); $('#backdrop').classList.add('show'); refreshIcons(); }
 function closeSheet(){ $('#sheet').classList.remove('open'); $('#backdrop').classList.remove('show'); }
  $('#backdrop').addEventListener('click', closeSheet);
+
+/* ============================== armazenamento de áudio (IndexedDB) ============================== */
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const rq=indexedDB.open('ataviva-audio',1);
+    rq.onupgradeneeded=()=>{ rq.result.createObjectStore('a'); };
+    rq.onsuccess=()=>res(rq.result);
+    rq.onerror=()=>rej(rq.error);
+  });
+}
+async function idbPut(k,v){ const db=await idbOpen();
+  return new Promise((res,rej)=>{ const tx=db.transaction('a','readwrite');
+    tx.objectStore('a').put(v,k);
+    tx.oncomplete=()=>{db.close();res();}; tx.onerror=()=>rej(tx.error); }); }
+async function idbGet(k){ const db=await idbOpen();
+  return new Promise((res,rej)=>{ const tx=db.transaction('a','readonly');
+    const r=tx.objectStore('a').get(k);
+    r.onsuccess=()=>{db.close();res(r.result||null);}; r.onerror=()=>rej(r.error); }); }
+async function idbDel(k){ try{ const db=await idbOpen();
+  const tx=db.transaction('a','readwrite'); tx.objectStore('a').delete(k);
+  tx.oncomplete=()=>db.close(); }catch(e){} }
 
 /* ============================== dados ============================== */
 const LS_KEY='ataviva.meetings.v1', LS_PEOPLE='ataviva.people.v1', LS_META='ataviva.meta.v1';
@@ -493,7 +531,8 @@ function renderBackupCard(){
 function openBackupSheet(){
   openSheet('<h3 class="sheet-title">Backup &amp; restauração</h3>'+
     '<p class="sheet-sub">Reuniões, transcrições, participantes e perfis de voz ficam <b>somente neste aparelho</b>. '+
-    'Exporte o arquivo de backup de vez em quando: ele devolve tudo aqui mesmo, ou em outro celular.</p>'+
+    'Exporte o arquivo de backup de vez em quando: ele devolve tudo aqui mesmo, ou em outro celular. '+
+    '(Os áudios das gravações não entram no backup — exporte os que quiser guardar pela opção Exportar do documento.)</p>'+
     '<p class="sheet-note" id="persistStatus" style="text-align:left;margin:10px 0 0">Verificando proteção do armazenamento…</p>'+
     '<div class="sheet-actions">'+
     '<button class="sheet-opt" id="bkExp"><span class="ic"><i data-lucide="download"></i></span>'+
@@ -501,7 +540,6 @@ function openBackupSheet(){
     '<button class="sheet-opt" id="bkImp"><span class="ic"><i data-lucide="upload"></i></span>'+
     '<span><span class="t">Restaurar de um arquivo</span><br><span class="d">Escolha um backup .json salvo</span></span></button>'+
     '</div>'+
-    '<p class="sheet-note">Fechar o navegador ou reiniciar o celular <b>não apaga nada</b>. O backup protege contra limpeza de dados do navegador, troca de aparelho ou desinstalação do app.</p>'+
     '<input type="file" id="bkFile" accept="application/json,.json" style="display:none">');
   if(navigator.storage && navigator.storage.persisted){
     navigator.storage.persisted().then(p=>{
@@ -718,7 +756,7 @@ function docPlainText(meeting,type,doc){
 /* ============================== navegação ============================== */
 const state={screen:'home',currentMid:null,docType:null,editing:false,back:'home',
   recording:false,paused:false,demo:false,personId:null,personReturn:null,personConfirm:false,
-  confirmDelete:null,confirmDelPerson:null,draft:null,analyzingFile:false,
+  confirmDelete:null,confirmDelPerson:null,draft:null,analyzingFile:false,localASR:false,
   attendeeNames:[],attendeePeople:[],attendeeIds:[]};
 function go(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -731,9 +769,10 @@ function meetingRow(m){
   const gen=Object.keys(m.docs||{});
   const chips=gen.length? ' · '+gen.length+' doc'+(gen.length>1?'s':'') : '';
   const pres=(m.attendees&&m.attendees.length)? ' · '+m.attendees.length+' presente'+(m.attendees.length>1?'s':'') : '';
+  const pend=(m.segments&&m.segments.length===0)? ' · SEM TRANSCRIÇÃO' : '';
   return '<button class="row" data-open="'+m.id+'" style="width:100%">'+
     '<div class="row-main"><div class="row-title">'+esc(m.title)+'</div>'+
-    '<div class="row-sub">'+esc(weekday(m.dateISO))+' · '+shortDate(m.dateISO)+' · '+fmtDur(m.duration)+pres+chips+'</div></div>'+
+    '<div class="row-sub">'+esc(weekday(m.dateISO))+' · '+shortDate(m.dateISO)+' · '+fmtDur(m.duration)+pres+pend+chips+'</div></div>'+
     '<i data-lucide="chevron-right" class="ch"></i></button>';
 }
 function renderTeamCard(){
@@ -769,7 +808,7 @@ function renderHistory(filter){
     if(state.confirmDelete===m.id){
       return '<div class="row" style="flex-wrap:wrap"><div class="row-main" style="flex-basis:100%">'+
         '<div class="row-title">Excluir “'+esc(m.title)+'”?</div>'+
-        '<div class="row-sub">A transcrição e os documentos serão perdidos.</div></div>'+
+        '<div class="row-sub">A transcrição, os documentos e o áudio serão perdidos.</div></div>'+
         '<div class="danger-row" style="flex-basis:100%;margin-top:10px">'+
         '<button class="btn red small" data-del="'+m.id+'">Excluir</button>'+
         '<button class="btn small" style="border:1px solid var(--line)" data-cancel>Cancelar</button></div></div>';
@@ -786,6 +825,7 @@ document.addEventListener('click',e=>{
   const conf=e.target.closest('[data-confirm]'); if(conf){ state.confirmDelete=conf.dataset.confirm; renderHistory($('#hsSearch').value); return; }
   const del=e.target.closest('[data-del]'); if(del){
     meetings=meetings.filter(m=>m.id!==del.dataset.del); state.confirmDelete=null; save();
+    idbDel(del.dataset.del);
     renderHistory($('#hsSearch').value); renderHome(); toast('Reunião excluída'); return; }
   if(e.target.closest('[data-cancel]')){ state.confirmDelete=null; renderHistory($('#hsSearch').value); }
 });
@@ -1128,6 +1168,7 @@ function openFormats(mid,back){
 function renderFormats(){
   const m=getMeeting(state.currentMid);
   $('#fmMeta').textContent=m.title+' · '+longDate(m.dateISO);
+  renderAsrPanel(m);
   $('#fmList').innerHTML=Object.entries(DOC_LABELS).map(([k,v],i)=>{
     const done=m.docs&&m.docs[k];
     return '<button class="fm-item" data-fmt="'+k+'" style="width:100%">'+
@@ -1137,6 +1178,19 @@ function renderFormats(){
       '<span class="fm-desc" style="display:block">'+v.desc+'</span></span>'+
       '<i data-lucide="chevron-right" class="ch" style="color:var(--ink-soft)"></i></button>';
   }).join('');
+  refreshIcons();
+}
+function renderAsrPanel(m){
+  const el=$('#asrPanel');
+  if(m.segments && m.segments.length===0){
+    el.style.display='block';
+    el.innerHTML='<div class="ap-t">Reunião salva só com o áudio</div>'+
+      '<p>Transcreva agora com a IA local (roda no aparelho; a 1ª vez baixa ≈41 MB). Sem depender do serviço de voz do navegador.</p>'+
+      '<button class="btn red" id="apGo" style="width:100%"><i data-lucide="sparkles"></i>Transcrever com IA local</button>';
+    $('#apGo').onclick=()=>transcribeMeeting(m.id);
+  }else{
+    el.style.display='none';
+  }
   refreshIcons();
 }
  $('#fmList').addEventListener('click',e=>{
@@ -1245,13 +1299,11 @@ function openExportSheet(){
     '<span><span class="t">PDF</span><br><span class="d">Documento paginado, pronto para imprimir</span></span></button>'+
     '<button class="sheet-opt" id="exDoc"><span class="ic"><i data-lucide="file"></i></span>'+
     '<span><span class="t">Word (.doc)</span><br><span class="d">Editável no Word e no Google Docs</span></span></button>'+
-    '<button class="sheet-opt" id="exAudio" '+(audioChunks.length?'':'style="opacity:.45"')+'>'+
-    '<span class="ic"><i data-lucide="mic"></i></span>'+
-    '<span><span class="t">Áudio da gravação (.webm)</span><br><span class="d">'+
-    (audioChunks.length?'Arquivo original capturado pelo microfone':'Disponível apenas para gravações com microfone')+'</span></span></button></div>');
+    '<button class="sheet-opt" id="exAudio"><span class="ic"><i data-lucide="mic"></i></span>'+
+    '<span><span class="t">Áudio da gravação (.webm)</span><br><span class="d">O áudio original salvo com esta reunião</span></span></button></div>');
   $('#exPdf').addEventListener('click',()=>{ exportPDF(); closeSheet(); });
   $('#exDoc').addEventListener('click',()=>{ exportWord(); closeSheet(); });
-  $('#exAudio').addEventListener('click',()=>{ if(audioChunks.length){ downloadAudio(); closeSheet(); } });
+  $('#exAudio').addEventListener('click',()=>{ closeSheet(); downloadAudio(); });
 }
 function exportPDF(){
   const m=getMeeting(state.currentMid), doc=m.docs[state.docType];
@@ -1303,10 +1355,14 @@ function exportWord(){
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   toast('Word exportado');
 }
-function downloadAudio(){
+async function downloadAudio(){
   const m=getMeeting(state.currentMid);
+  let blob=null;
+  try{ blob=await idbGet(m.id); }catch(e){}
+  if(!blob && audioChunks.length) blob=new Blob(audioChunks,{type:(mediaRecorder&&mediaRecorder.mimeType)||'audio/webm'});
+  if(!blob){ toast('Sem áudio salvo para esta reunião'); return; }
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(audioChunks,{type:mediaRecorder?mediaRecorder.mimeType:'audio/webm'}));
+  a.href=URL.createObjectURL(blob);
   a.download='AtaViva-'+slug(m.title)+'.webm'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   toast('Áudio baixado');
@@ -1317,7 +1373,6 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let stream=null,mediaRecorder=null,audioChunks=[],analyser=null,audioCtx=null,waveRAF=null;
 let recognition=null,timerInt=null,demoInt=null,startedAt=0,pausedAt=0,pausedTotal=0;
 let demoScript=[],demoIdx=0,liveFeat=[];
-/* diagnóstico da transcrição (v1.2) */
 let watchdogInt=null, srGotAny=false, srDisabled=false;
 
 function updateHints(){
@@ -1327,7 +1382,9 @@ function updateHints(){
 }
 function showSrBanner(msg){
   const b=$('#srBanner');
-  b.innerHTML='<p>'+esc(msg)+'</p><button id="btnSimulate">Simular transcrição</button>';
+  b.innerHTML='<p>'+esc(msg)+'</p>'+
+    '<span class="sr-acts"><button id="btnLocalAsr">IA local ao finalizar</button>'+
+    '<button id="btnSimulate">Simular transcrição</button></span>';
   b.style.display='flex';
   $('#btnSimulate').addEventListener('click',()=>{
     srDisabled=true;
@@ -1335,6 +1392,11 @@ function showSrBanner(msg){
     $('#srBanner').style.display='none';
     if(state.paused) applyPause(false);
     startDemo();
+  });
+  $('#btnLocalAsr').addEventListener('click',()=>{
+    state.localASR=true;
+    b.style.display='none';
+    toast('Ao finalizar, o áudio será transcrito com IA local');
   });
   refreshIcons();
 }
@@ -1346,13 +1408,13 @@ function startWatchdog(){
     if(state.paused||state.demo) return;
     if(srGotAny){ clearInterval(watchdogInt); return; }
     if(elapsed()>=12 && $('#srBanner').style.display!=='flex'){
-      showSrBanner('A transcrição não recebeu nenhuma fala até agora. Se você está falando perto do celular, seu navegador pode não oferecer o serviço de transcrição. O áudio continua sendo gravado — e você pode simular uma transcrição para testar o resto do fluxo.');
+      showSrBanner('A transcrição ao vivo não recebeu nenhuma fala até agora. Seu navegador pode não oferecer o serviço de voz. O áudio está sendo gravado — ao finalizar, dá para transcrever com a IA local.');
     }
   },3000);
 }
 
 function openRecord(){
-  state.recording=true; state.paused=false; state.demo=false;
+  state.recording=true; state.paused=false; state.demo=false; state.localASR=false;
   state.segments=[]; pausedTotal=0; demoIdx=0; liveFeat=[];
   $('#txList').innerHTML=''; $('#interim').textContent='';
   $('#recLabel').textContent='GRAVANDO'; $('#recDot').classList.remove('paused');
@@ -1386,7 +1448,7 @@ async function startRecording(){
     mediaRecorder.ondataavailable=e=>{ if(e.data.size) audioChunks.push(e.data); };
     mediaRecorder.start(1000);
     if(SR) startSR();
-    else showSrBanner('Transcrição ao vivo indisponível neste navegador (requer Chrome ou Edge). O áudio continua sendo gravado — você pode simular uma transcrição para testar o fluxo.');
+    else showSrBanner('Transcrição ao vivo indisponível neste navegador. O áudio está sendo gravado — ao finalizar, dá para transcrever com a IA local (roda no aparelho).');
   }catch(e){
     state.demo=true; $('#recMode').textContent='DEMONSTRAÇÃO'; $('#recMode').classList.remove('red');
     toast('Microfone indisponível — reunião de demonstração');
@@ -1436,18 +1498,17 @@ function startSR(){
     const r=e&&e.error;
     if(r==='no-speech'||r==='aborted') return;
     const msgs={
-      'not-allowed':'O serviço de transcrição foi impedido de usar o microfone. Verifique as permissões do site (cadeado ao lado do endereço) e do navegador.',
-      'service-not-allowed':'Este navegador bloqueou o serviço de transcrição de voz — é comum no Brave e em navegadores focados em privacidade. Tente pelo Google Chrome.',
-      'network':'Sem conexão com o serviço de transcrição. Verifique se a internet está funcionando.',
+      'not-allowed':'O serviço de transcrição foi impedido de usar o microfone. Verifique as permissões do site (cadeado ao lado do endereço).',
+      'service-not-allowed':'Este navegador bloqueou o serviço de transcrição de voz — comum no Brave e em navegadores focados em privacidade. O áudio segue gravando: ao finalizar, use a IA local.',
+      'network':'Sem conexão com o serviço de transcrição. O áudio segue gravando: ao finalizar, use a IA local.',
       'audio-capture':'O microfone não está disponível para a transcrição.',
       'language-not-supported':'Este navegador não suporta transcrição em português.'
     };
-    showSrBanner(msgs[r]||('A transcrição apresentou um problema ('+r+') e foi interrompida. O áudio continua sendo gravado — você pode simular uma transcrição para testar o fluxo.'));
+    showSrBanner(msgs[r]||('A transcrição apresentou um problema ('+r+') e foi interrompida. O áudio segue gravando — ao finalizar, use a IA local.'));
   };
   recognition.onend=()=>{ if(state.recording&&!state.paused&&!srDisabled){ try{ recognition.start(); }catch(e){} } };
   try{ recognition.start(); }catch(e){}
 }
-/* ---- perfil vocal da janela recente + pareamento com participantes ---- */
 function windowProfile(){
   const f=liveFeat;
   if(f.length<6) return null;
@@ -1541,24 +1602,54 @@ function applyPause(p){
 });
  $('#btnFinalize').addEventListener('click',finalize);
 function finalize(){
+  if(state.segments.length===0 && state.localASR && audioChunks.length){
+    saveAudioOnly(true); return;
+  }
   if(state.segments.length===0){
+    const hasAudio=audioChunks.length>0;
     openSheet('<h3 class="sheet-title">Nada foi transcrito</h3>'+
-      '<p class="sheet-sub">Não capturamos nenhuma fala nesta gravação'+(state.paused?' — e o status estava <b>PAUSADO</b>, o que também suspende a transcrição':'')+
-      '. Você pode continuar gravando, simular uma transcrição de demonstração ou descartar a reunião.</p>'+
-      '<button class="btn ghost" id="optResume" style="width:100%"><i data-lucide="mic"></i>Continuar gravando</button>'+
-      '<button class="btn red" id="optSim" style="width:100%;margin-top:10px"><i data-lucide="sparkles"></i>Simular transcrição de demonstração</button>'+
-      '<button class="sheet-opt" id="optDrop" style="justify-content:center;margin-top:4px"><span class="t" style="font-weight:500;font-size:13px;color:var(--ink-soft)">Descartar reunião</span></button>');
+      '<p class="sheet-sub">O áudio desta sessão '+(hasAudio?'<b>foi gravado</b>':'não ficou disponível')+
+      (state.paused?' e o status estava <b>PAUSADO</b> (pausar também suspende a transcrição)':'')+
+      '. Você pode transcrever com a IA local, continuar gravando ou descartar.</p>'+
+      (hasAudio
+        ?'<button class="btn red" id="optWhisper" style="width:100%"><i data-lucide="sparkles"></i>Transcrever com IA local</button>'+
+         '<p class="sheet-note" style="margin-top:8px">Roda no aparelho · a 1ª vez baixa ≈41 MB · pode levar alguns minutos</p>'+
+         '<button class="btn ghost" id="optSaveAudio" style="width:100%;margin-top:10px">Salvar só o áudio (transcrever depois)</button>'
+        :'')+
+      '<button class="btn ghost" id="optResume" style="width:100%;margin-top:10px"><i data-lucide="mic"></i>Continuar gravando</button>'+
+      '<button class="sheet-opt" id="optSim" style="justify-content:center"><span class="t" style="font-weight:500;font-size:13px;color:var(--red-deep)">Simular transcrição de demonstração</span></button>'+
+      '<button class="sheet-opt" id="optDrop" style="justify-content:center;border-bottom:none"><span class="t" style="font-weight:500;font-size:13px;color:var(--ink-soft)">Descartar reunião</span></button>');
+    if(hasAudio) $('#optWhisper').addEventListener('click',()=>{ closeSheet(); saveAudioOnly(true); });
+    if(hasAudio) $('#optSaveAudio').addEventListener('click',()=>{ closeSheet(); saveAudioOnly(false); });
     $('#optResume').addEventListener('click',()=>{ closeSheet(); if(state.paused) applyPause(false); });
     $('#optSim').addEventListener('click',()=>{ closeSheet(); if(state.paused) applyPause(false); startDemo(); });
     $('#optDrop').addEventListener('click',()=>{ closeSheet(); discard(); });
     return;
   }
   stopAll();
+  const mt=(mediaRecorder&&mediaRecorder.mimeType)||'audio/webm';
+  const blob=audioChunks.length? new Blob(audioChunks.slice(),{type:mt}) : null;
   const m={ id:uid(), title:autoTitle(), dateISO:new Date().toISOString(),
     duration:Math.round(elapsed()), segments:state.segments.slice(),
     attendees:state.attendeeNames.slice(), docs:{}, demo:state.demo };
   meetings.unshift(m); save();
+  if(blob) idbPut(m.id,blob).catch(()=>{});
   showProcessing(()=>openFormats(m.id,'home'));
+}
+function saveAudioOnly(andTranscribe){
+  stopAll();
+  const mt=(mediaRecorder&&mediaRecorder.mimeType)||'audio/webm';
+  const blob=audioChunks.length? new Blob(audioChunks.slice(),{type:mt}) : null;
+  const m={ id:uid(), title:autoTitle(), dateISO:new Date().toISOString(),
+    duration:Math.round(elapsed()), segments:[],
+    attendees:state.attendeeNames.slice(), docs:{}, demo:state.demo };
+  meetings.unshift(m); save();
+  showProcessing(()=>{
+    openFormats(m.id,'home');
+    if(blob) idbPut(m.id,blob).then(()=>{ if(andTranscribe) transcribeMeeting(m.id); })
+      .catch(()=>{ if(andTranscribe) toast('Sem áudio salvo para transcrever'); });
+    else if(andTranscribe) toast('Sem áudio salvo para transcrever');
+  });
 }
 function autoTitle(){
   const first=state.segments[0]?state.segments[0].text:'';
@@ -1580,6 +1671,113 @@ function stopAll(){
   $('#listeningHint').style.display='none';
   $('#pausedHint').style.display='none';
 }
+
+/* ============================== transcrição local (Whisper no aparelho) ============================== */
+const ASR_CODE=[
+"import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';",
+"env.allowLocalModels = false;",
+"let tr = null, loading = null;",
+"async function getTr(){",
+"  if(tr) return tr;",
+"  if(!loading) loading = pipeline('automatic-speech-recognition','Xenova/whisper-tiny',{quantized:true,",
+"    progress_callback:p=>{ if(p && p.status==='progress' && p.total) self.postMessage({type:'dl',pct:Math.round(p.progress||0)}); }});",
+"  tr = await loading; return tr;",
+"}",
+"self.onmessage = async (e)=>{",
+"  const d = e.data||{};",
+"  try{",
+"    if(d.type==='run'){",
+"      self.postMessage({type:'status',msg:'preparando'});",
+"      const t = await getTr();",
+"      self.postMessage({type:'status',msg:'transcrevendo'});",
+"      let n=0;",
+"      const out = await t(new Float32Array(d.audio),{language:'portuguese',task:'transcribe',",
+"        return_timestamps:true, chunk_length_s:30, stride_length_s:5,",
+"        chunk_callback:()=>{ n++; self.postMessage({type:'chunk',n}); }});",
+"      self.postMessage({type:'done', ok:true, out});",
+"    }",
+"  }catch(err){ self.postMessage({type:'done', ok:false, message:String((err&&err.message)||err)}); }",
+"};"
+].join('\n');
+let asrW=null, asrResolve=null, asrReject=null, asrUI={}, asrBusy=false;
+function ensureASR(){
+  if(asrW) return asrW;
+  asrW=new Worker(URL.createObjectURL(new Blob([ASR_CODE],{type:'text/javascript'})),{type:'module'});
+  asrW.onmessage=e=>{
+    const d=e.data||{};
+    if(d.type==='dl'&&asrUI.onDl) asrUI.onDl(d.pct||0);
+    else if(d.type==='status'&&asrUI.onStatus) asrUI.onStatus(d.msg);
+    else if(d.type==='chunk'&&asrUI.onChunk) asrUI.onChunk(d.n||0);
+    else if(d.type==='done'){
+      const r=asrResolve,j=asrReject; asrResolve=null; asrReject=null; asrBusy=false;
+      if(d.ok){ r&&r(d.out); } else { j&&j(new Error(d.message||'falha na transcrição')); }
+    }
+  };
+  asrW.onerror=e=>{
+    const j=asrReject; asrResolve=null; asrReject=null; asrBusy=false;
+    j&&j(new Error('não foi possível carregar a IA local — verifique a internet na primeira vez'));
+  };
+  return asrW;
+}
+function runASR(audio,ui){
+  return new Promise((resolve,reject)=>{
+    asrUI=ui||{}; asrResolve=resolve; asrReject=reject; asrBusy=true;
+    const w=ensureASR();
+    w.postMessage({type:'run',audio},[audio.buffer]);
+  });
+}
+async function toMono16k(blob){
+  const ab=await blob.arrayBuffer();
+  const AC=window.AudioContext||window.webkitAudioContext;
+  const tmp=new AC();
+  let buf;
+  try{ buf=await tmp.decodeAudioData(ab); }finally{ try{tmp.close();}catch(e){} }
+  const frames=Math.max(1,Math.ceil(buf.duration*16000));
+  const off=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,frames,16000);
+  const s=off.createBufferSource(); s.buffer=buf; s.connect(off.destination); s.start();
+  const out=await off.startRendering();
+  return out.getChannelData(0);
+}
+function showASR(){ $('#asrOv').classList.add('show'); asrProgress('PREPARANDO…'); }
+function hideASR(){ $('#asrOv').classList.remove('show'); }
+function asrProgress(txt){
+  $('#asrTxt').textContent=txt;
+  const line=$('#asrLine');
+  if(/BAIXANDO/.test(txt)){ line.classList.remove('indet');
+    const m=txt.match(/(\d+)%/); $('#asrFill').style.width=(m?m[1]:0)+'%'; }
+  else{ line.classList.add('indet'); $('#asrFill').style.width='40%'; }
+}
+async function transcribeMeeting(mid){
+  const m=getMeeting(mid); if(!m) return;
+  if(asrBusy){ toast('Já estou transcrevendo — aguarde'); return; }
+  let blob=null;
+  try{ blob=await idbGet(mid); }catch(e){}
+  if(!blob){ toast('Sem áudio salvo para transcrever'); return; }
+  showASR();
+  try{
+    asrProgress('ABRINDO O ÁUDIO…');
+    const audio=await toMono16k(blob);
+    asrProgress('BAIXANDO MODELO DE IA…');
+    const out=await runASR(audio,{
+      onDl:p=>asrProgress('BAIXANDO MODELO DE IA… '+p+'%'),
+      onStatus:s=>{ if(s==='transcrevendo') asrProgress('TRANSCREVENDO NO APARELHO…'); },
+      onChunk:n=>asrProgress('TRANSCREVENDO NO APARELHO… TRECHO '+n)
+    });
+    const segs=(out.chunks||[])
+      .map(c=>({t:Math.max(0,Math.round((c.timestamp&&c.timestamp[0])||0)),text:(c.text||'').trim()}))
+      .filter(s=>s.text);
+    if(!segs.length && out.text && out.text.trim()) segs.push({t:0,text:out.text.trim()});
+    if(!segs.length) throw new Error('Nenhuma fala detectada no áudio');
+    m.segments=segs; save();
+    hideASR(); renderFormats();
+    toast('Transcrição concluída · '+segs.length+' falas');
+  }catch(err){
+    hideASR();
+    const msg=(err&&err.message)||String(err);
+    toast(msg.length>60? msg.slice(0,60)+'…' : msg);
+  }
+}
+ $('#btnSimulate').addEventListener('click',()=>{ $('#srBanner').style.display='none'; startDemo(); });
 
 /* processamento */
 function showProcessing(done){
