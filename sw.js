@@ -1,5 +1,5 @@
 /* Ata Viva — cache offline (a transcrição por voz sempre usa internet) */
-const V = 'ataviva-v1.3';
+const V = 'ataviva-v1.4';
 
 const SHELL = [
   './', './index.html', './manifest.json', './icon.svg',
